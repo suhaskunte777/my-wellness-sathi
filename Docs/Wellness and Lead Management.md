@@ -34,8 +34,12 @@
   - [Prospect and Related Migrations](#prospect-and-related-migrations)
   - [User and Prospect Shared Migritions](#user-and-prospect-shared-migritions)
     - [Profile Details](#profile-details)
-    - [Address](#address)
+    - [User Groups](#user-groups)
+    - [Marketing Level](#marketing-level)
     - [Contacts](#contacts)
+    - [Addresses](#addresses)
+    - [Photos](#photos)
+    - [Contacts](#contacts-1)
     - [Health](#health)
 
 ## System Overview
@@ -141,7 +145,7 @@ A comprehensive wellness industry platform serving four primary user types:
 
 ### Core User Migration
 ```php
-    Schema::create('users', function (Blueprint $table) {
+Schema::create('users', function (Blueprint $table) {
         $table->uuid('uuid')->primary();
         $table->string('name');
         $table->date('birth_date')->nullable();
@@ -150,14 +154,15 @@ A comprehensive wellness industry platform serving four primary user types:
         $table->string('username')->unique();
         $table->string('email')->index();
         $table->timestamp('email_verified_at')->nullable();
-        $table->string('mobile');
+        $table->string('mobile')->nullable();
         $table->timestamp('mobile_verified_at')->nullable();
         $table->string('password');
+        $table->boolean('is_admin')->default(false);
         $table->foreign('created_by')->references('id')->on('users');
         $table->rememberToken();
         $table->timestamps();
         $table->softDeletes();
-    });
+});
 ```
 
 ### Required Spatie Permission Migrations
@@ -282,16 +287,24 @@ Schema::create('password_reset_tokens', function (Blueprint $table) {
 
 ## API Authentication Endpoints
 
+**Currently Implemented:**
+```php
+// Authentication Routes (Web-based, not API)
+POST api/register  (invitation only)
+POST api/login
+POST api/logout
+POST api/forgot-password
+POST api/reset-password
+GET api/verify-email/{id}/{hash}
+POST api/email/verification-notification
+```
+
+**Planned API Endpoints:**
 ```php
 // Authentication Routes
-POST /api/auth/login
-POST /api/auth/register (invitation only)
-POST /api/auth/logout
-POST /api/auth/refresh
-POST /api/auth/forgot-password
+
 POST /api/auth/forgot-username
 POST /api/auth/reset-password
-POST /api/auth/verify-email
 POST /api/auth/verify-mobile
 
 // Profile Management
@@ -301,33 +314,54 @@ PUT /api/auth/password
 POST /api/auth/profile-switch (for all authenticated profiles)
 ```
 
-
 ## Prospect and Related Migrations
 
 ```sql
 Schema::create('prospects', function (Blueprint $table) {
-        $table->uuid('uuid')->primary();
-        $table->string('name');
-        $table->string('primary_phone')->nullable();
-        $table->integer('age')->nullable();
-        $table->enum('gender', ['male', 'female', 'other'])->nullable();
-        $table->enum('source', ['TTP', 'Assessment', 'Measurement_Camp', 'Referral', 'Social_Media', 'Advertisement', 'Walk_In', 'Other'])->nullable();
-        $table->string('source_details')->nullable();
-        $table->enum('lead_stage', ['new', 'contacted', 'interested', 'qualified', 'converted', 'lost', 'hold', 'archived'])->nullable();
-        $table->enum('interest_level', ['low', 'medium', 'high'])->nullable();
-        $table->string('referred_by', 36)->nullable();
-        $table->string('notes')->nullable();
-        $table->date('last_follow_up_date')->nullable();
-        $table->date('next_follow_up_date')->nullable();
-        
-        $table->integer('conversion_probability')->nullable();
-        $table->string('converted_to_user_id', 36)->nullable();
-        $table->timestamp('converted_at')->nullable();
-        $table->boolean('is_active')->default(true);
-        $table->timestamps();
-        $table->softDeletes();
-    });
-);
+    $table->uuid('uuid')->primary();
+    $table->string('name');
+    $table->string('primary_phone')->nullable();
+    $table->date('birth_date')->nullable();
+    $table->integer('birth_year', 4)->nullable();
+    $table->integer('age')->nullable();
+    $table->enum('age_by', ['birth_date', 'birth_year', 'age'])->nullable();
+    $table->integer('height')->nullable();
+    $table->enum('gender', ['male', 'female', 'other'])->nullable();
+    $table->enum('marital_status', ['single', 'married', 'divorced', 'widowed'])->nullable();
+    $table->enum('occupation', ['student', 'employed', 'unemployed', 'retired', 'housewife', 'other'])->nullable();
+    $table->string('mother_tongue', 25)->nullable();
+    $table->enum('source', ['TTP', 'Assessment', 'Measurement_Camp', 'Referral', 'Paper_Insert', 'Circular_of_Influence', 'Social_Media', 'Advertisement', 'Walk_In', 'Other'])->nullable();
+    $table->string('source_details', 191)->nullable();
+    $table->enum('lead_stage', ['New', 'Contacted', 'Interested', 'Qualified', 'Converted', 'Lost', 'Hold', 'Archived'])->nullable();
+    $table->string('referred_by', 36)->nullable();
+    $table->string('notes')->nullable();
+    $table->date('last_follow_up_date')->nullable();
+    $table->date('next_follow_up_date')->nullable();
+
+    $table->string('health_challenge', 255)->nullable();
+    $table->string('medication', 255)->nullable();
+    $table->string('health_goal', 255)->nullable();
+    
+    $table->integer('conversion_probability')->nullable();
+    $table->string('converted_to_user_id', 36)->nullable();
+    $table->timestamp('converted_at')->nullable();
+    $table->boolean('is_active')->default(true);
+
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('coach_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+
+    $table->timestamps();
+    $table->softDeletes();
+    
+    // Performance indexes
+    $table->index(['lead_stage', 'is_active']);
+    $table->index(['coach_id', 'is_active']);
+    $table->index(['created_by', 'is_active']);
+    $table->index(['next_follow_up_date']);
+    $table->index(['converted_to_user_id']);
+});
 ```
 
 
@@ -337,41 +371,232 @@ Schema::create('prospects', function (Blueprint $table) {
 ```php
     Schema::create('profile_details', function (Blueprint $table) {
         $table->uuid('uuid')->primary();
-        $table->string('first_name');
-        $table->string('middle_name')->nullable();
-        $table->string('last_name');
-        $table->string('primary_email')->nullable();
-        $table->string('primary_phone')->nullable();
+        $table->foreignUuid('user_id')->constrained('users', 'uuid')->onDelete('cascade');
+        $table->string('first_name', 191)->nullable();
+        $table->string('middle_name', 191)->nullable();
+        $table->string('last_name', 191)->nullable();
+        $table->string('primary_email', 50)->nullable();
+        $table->string('primary_phone', 18)->nullable();
         $table->date('birth_date')->nullable();
-        $table->integer('birth_year')->nullable();
-        $table->integer('age')->nullable();
+        $table->integer('birth_year', 4)->nullable();
+        $table->integer('age', 3)->nullable();
         $table->enum('age_by', ['birth_date', 'birth_year', 'age'])->nullable();
         $table->enum('gender', ['male', 'female', 'other'])->nullable();
         $table->enum('marital_status', ['single', 'married', 'divorced', 'widowed'])->nullable();
-        $table->string('occupation')->nullable();
-        $table->string('mother_tongue')->nullable();
-        $table->string('source')->nullable();
-        $table->string('source_details')->nullable();
-        $table->string('lead_stage')->nullable();
-        $table->string('interest_level')->nullable();
-        $table->string('coach_id')->nullable();
-        $table->string('referred_by')->nullable();
+        $table->enum('source', ['TTP', 'Assessment', 'Measurement_Camp', 'Referral', 'Paper_Insert', 'Circular_of_Influence', 'Social_Media', 'Advertisement', 'Walk_In', 'Other'])->nullable();
+        $table->string('source_details', 191)->nullable();
+        $table->string('occupation', 191)->nullable();
+        $table->string('mother_tongue', 25)->nullable();
         $table->string('notes')->nullable();
-        $table->date('last_contact_date')->nullable();
+        $table->date('last_follow_up_date')->nullable();
         $table->date('next_follow_up_date')->nullable();
-        $table->integer('conversion_probability')->nullable();
-        $table->string('converted_to_user_id')->nullable();
+        $table->string('converted_from_prospect_uuid', 36)->nullable();
         $table->timestamp('converted_at')->nullable();
+        
+        $table->enum('marketing_level', ['Guest', 'Preferred_Customer', 'Associate', 'Senior_Consultant', 'Success_Builder', 'Supervisor', 'Active_Supervisor', 'World_Team', 'Active_World_Team', 'GET', 'GET 2500','MIL', 'MIL 7500', 'PRESIDENT TEAM', 'Executive Presidents Team', 'Senior Executive Presidents Team', 'International Executive Presidents Team', 'Chief Executive Presidents Team', 'Chairmans Club', 'Founder Circle' ])->default('Guest');
+        $table->integer('diamonds')->nullable();
+        $table->integer('stones')->nullable();
+        $table->integer('royalty_level')->nullable();
+        $table->integer('discount_level')->default(0);
+        $table->integer('years_active')->default(0);
+        $table->integer('mark_hughes_award')->default(0);
+
+        $table->string('supervisor_id', 36)->nullable(); // First upline supervisor marketing level
+        $table->string('world_team_id', 36)->nullable(); // First upline world team marketing level
+        $table->string('get_id', 36)->nullable(); // First upline get marketing level
+        $table->string('mil_id', 36)->nullable(); // First upline mil marketing level
+        $table->string('president_team_id', 36)->nullable(); // First upline president team marketing level
+        
         $table->boolean('is_active')->default(true);
+        $table->foreignUuid('coach_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('referred_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('supervisor_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('world_team_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('get_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('mil_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('president_team_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        
         $table->timestamps();
         $table->softDeletes();
+        
+        // Performance indexes
+        $table->index(['user_id', 'is_active']);
+        $table->index(['coach_id', 'is_active']);
+        $table->index(['created_by', 'is_active']);
+        $table->index(['next_follow_up_date']);
+        $table->index(['converted_from_prospect_uuid']);
     });
 ```
 
-### Address
+### User Groups
+
+```php
+    Schema::create('groups', function (Blueprint $table) {
+        $table->uuid('uuid')->primary();
+        $table->string('groupable_type', 191)->nullable(); // User or Club or Prospect
+        $table->string('groupable_id', 36)->nullable(); // User or Club or Prospect ID
+        $table->string('name')->notNull();
+        $table->string('description')->nullable();
+        $table->enum('type', ['marketing_level', 'coach_hierarchy', 'club', 'non-supervisor', 'batch', 'demographic', 'program_batch', 'custom'])->notNull();
+        $table->string('custom_type')->nullable();
+        $table->string('group_code')->nullable()->unique();
+        $table->json('criteria')->nullable();
+        $table->boolean('auto_assign')->default(false);
+        $table->boolean('is_active')->default(true);
+        $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->timestamps();
+        $table->softDeletes();
+        
+        // Performance indexes
+        $table->index(['groupable_type', 'groupable_id']);
+        $table->index(['type', 'is_active']);
+        $table->index(['created_by', 'is_active']);
+});
+```
+
+- **User Auto assing Groups Criteria**
+  - marketing_level
+    - Based on marketing level, assing the group to the user.
+  - club
+    - Based on club, assing the group to the user.
+  - All non-supervisor users
+    - Users belogns to 'Associate', 'Senior_Consultant', 'Success_Builder' marketing level are called as non-supervisor.
+  - All supervisor users
+    - Users belogns to 'Supervisor' and above marketing level are called as supervisor.
+  - All TAB team users all 
+    - Users belogns to GET and above till MIL7500 marketing level are called as TAB team.
+  - All President team users
+    - Users belogns to 'President Team', 'Executive Presidents Team', 'Senior Executive Presidents Team', 'International Executive Presidents Team', 'Chief Executive Presidents Team', 'Chairmans Club', 'Founder Circle' marketing level are called as President team.
+
+
+### Marketing Level 
+
+- This is a fix value table, feel with seeding only. And can be keep long cached.
+```php
+Schema::create('marketing_levels', function (Blueprint $table) {
+    $table->id();
+    $table->integer('level')->unique();
+    $table->string('name')->index();
+    $table->timestamps();
+});
+```
+
+
+### Contacts
+
+- All contacts with country code, email format, phone format, etc. should be validated during input. if not available in laravel inbuilt, then use its ecosystem or third party package.
+
+```php
+    Schema::create('contacts', function (Blueprint $table) {
+        $table->uuid('uuid')->primary();
+        $table->string('contactable_type', 191)->nullable(); // User or Club
+        $table->string('contactable_id', 36)->nullable(); // User or Club ID
+        $table->enum('type', ['Mobile', 'TelePhone', 'WhatsApp', 'Email', 'Facebook', 'Instagram', 'YouTube', 'Telegram', 'Other', 'WhatsApp Business', 'WhatsApp Personal', 'Custom'])->default('Mobile');
+        $table->string('custom_type')->nullable();
+        $table->string('value')->notNull();
+        $table->boolean('is_primary')->default(false);
+        $table->boolean('is_verified')->default(false);
+        $table->string('tags')->nullable();
+        $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->timestamps();
+        $table->softDeletes();
+        
+        // Performance indexes
+        $table->index(['contactable_type', 'contactable_id']);
+        $table->index(['type', 'is_primary']);
+        $table->index(['is_verified']);
+    });
+```
+
+### Addresses
+
+- As we dont have all city, taluka, district, state, country, pincode in our system, we need to use any third party service to get this verified or also strip, capitalization, etc. during input validation. check if laravel or its ecosystem or third party has any package for this.
+- If google map link is provided, then can we get latitude and longitude from it without any cost? if yes, then we can use it.
+- Also can we get city, taluka, district, state, country, pincode from google map link without any cost? if yes, then we can use it.
+
+```php  
+    Schema::create('addresses', function (Blueprint $table) {
+        $table->uuid('uuid')->primary();
+        $table->string('addressable_type', 191)->nullable(); // User or Club
+        $table->string('addressable_id', 36)->nullable(); // User or Club ID
+        $table->enum('type', ['home', 'office', 'club', 'temporary', 'other', 'custom'])->default('home');
+        $table->string('address_name')->nullable();
+        $table->string('address_line_1')->notNull();
+        $table->string('address_line_2')->nullable();
+        $table->string('city')->notNull();
+        $table->string('taluka')->nullable();
+        $table->string('district')->notNull();
+        $table->string('state')->notNull();
+        $table->string('country')->notNull()->default('India');
+        $table->string('pincode')->notNull();
+        $table->string('google_map_link')->nullable();
+        $table->decimal('latitude', 11, 8)->nullable();
+        $table->decimal('longitude', 11, 8)->nullable();
+        $table->boolean('is_primary')->default(false);
+        $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+        $table->timestamps();
+        $table->softDeletes();
+        
+        // Performance indexes
+        $table->index(['addressable_type', 'addressable_id']);
+        $table->index(['type', 'is_primary']);
+        $table->index(['city', 'state']);
+        $table->index(['pincode']);
+        $table->index(['latitude', 'longitude']);
+    });
+```
+
+### Photos
+
+- All photos should be stored in storage/app/public/photos/user_photos/
+- We should have a library or package to compress the photo before storing in database without losing quality.
+- photos should have expiry date, after which it will be deleted from database and storage.
+- frontend we can use some library to identify the photo type and suggest it accordingly.
+
+```php 
+Schema::create('photos', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->string('photoable_type', 191)->nullable(); // User or Club or Prospect
+    $table->string('photoable_id', 36)->nullable(); // User or Club or Prospect ID
+    $table->enum('type', ['Profile', 'Front', 'Back', 'Left', 'Right', 'Full_body', 'Measurement', 'Shake', 'Afresh', 'Skin_Booster', 'H24_Hydrate', 'H24_Rebuild', 'Sleep_Enhancer', 'Niteworks', 'Beta_Heart', 'Tablet',  'Meal', 'Snacks', 'Activity_Proof', 'Custom'])->notNull();
+    $table->string('custom_type')->nullable();
+    $table->string('file_path', 500)->notNull();
+    $table->string('file_name', 255)->notNull();
+    $table->integer('file_size')->notNull();
+    $table->string('mime_type', 100)->notNull();
+    $table->string('caption')->nullable();
+    $table->timestamp('taken_at')->nullable();
+    $table->decimal('latitude', 10, 8)->nullable();
+    $table->decimal('longitude', 11, 8)->nullable();
+    $table->boolean('is_primary')->default(false);
+    $table->string('tags')->nullable();
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+    
+    // Performance indexes
+    $table->index(['photoable_type', 'photoable_id']);
+    $table->index(['type', 'is_primary']);
+    $table->index(['file_path']);
+    $table->index(['taken_at']);
+    $table->index(['latitude', 'longitude']);
+});
+```
 
 
 ### Contacts
 
 
 ### Health
+

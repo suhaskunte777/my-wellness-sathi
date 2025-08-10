@@ -355,7 +355,7 @@ Schema::create('prospects', function (Blueprint $table) {
     $table->string('health_goal', 255)->nullable();
     
     $table->unsignedTinyInteger('conversion_probability')->nullable();
-    $table->string('converted_to_user_id', 36)->nullable();
+    $table->string('converted_to_user_uuid', 36)->nullable();
     $table->timestamp('converted_at')->nullable();
     $table->boolean('is_active')->default(true);
 
@@ -372,7 +372,7 @@ Schema::create('prospects', function (Blueprint $table) {
     $table->index(['coach_id', 'is_active']);
     $table->index(['created_by', 'is_active']);
     $table->index(['next_follow_up_date']);
-    $table->index(['converted_to_user_id']);
+    $table->index(['converted_to_user_uuid']);
 });
 ```
 
@@ -383,7 +383,7 @@ Schema::create('prospects', function (Blueprint $table) {
 ```php
 Schema::create('profile_details', function (Blueprint $table) {
     $table->uuid('uuid')->primary();
-    $table->foreignUuid('user_id')->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade');
     $table->string('first_name', 191)->nullable();
     $table->string('middle_name', 191)->nullable();
     $table->string('last_name', 191)->nullable();
@@ -429,7 +429,7 @@ Schema::create('profile_details', function (Blueprint $table) {
     $table->softDeletes();
     
     // Performance indexes
-    $table->index(['user_id', 'is_active']);
+    $table->index(['user_uuid', 'is_active']);
     $table->index(['coach_id', 'is_active']);
     $table->index(['created_by', 'is_active']);
     $table->index(['next_follow_up_date']);

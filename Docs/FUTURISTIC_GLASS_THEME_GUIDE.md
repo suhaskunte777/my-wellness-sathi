@@ -23,6 +23,11 @@ This glass theme creates a modern, futuristic interface using glassmorphism effe
 - **Smooth animations** and hover effects
 - **Consistent spacing** and typography
 - **Accessible contrast ratios**
+- **Material Design Icons** for consistent icons. Check `client/Documentations/MDI_NOTIFICATION_SETUP.md` for more details.
+- **Quasar** framework for UI components. 
+- **Vue 3 Composition API** with **Pinia** for state management.
+- **Vue Router** for routing.
+- **Vue I18n** for internationalization.
 
 ## 🎯 Design Principles
 

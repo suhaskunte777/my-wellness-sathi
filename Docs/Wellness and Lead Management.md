@@ -806,3 +806,47 @@ Schema::create('daily_tracker_intakes', function (Blueprint $table) {
 - Address validation services
 - Google Maps integration
 - Email/SMS notification systems
+
+
+• Activities 
+• Active
+• TTP
+• Flyer
+• Survey 
+• Health Check Camp
+• Road Show
+• Afresh Party
+• MIW
+• Business Opportunity
+• Passive
+• Social Media Ads - Facebook,  Instagram,  X, Google, Yahoo, Bing, Other
+• Bulk Messaging
+• Bulk Emailing 
+• Poster - Wall / Auto / Banner
+
+Details to Capture
+- schedule & actual start Date & Time
+- schedule & actual end Date & Time
+- Location
+- Location Remark (if any)
+- Activity - enum
+- Activity Type  - enum
+- invites - (count of people you asked)
+- Accepted- (contact/healthcheck) 
+- Name of Participants (with role)
+- Prospect Distribution Method - Enum
+- Prospects Array (with assignment)
+
+
+If Activity type is Group, and Participant coaches are not under creator, then he has to share link to other coaches to participate.  And creater has to approve it.
+If coaches under creator, then he can send invites directly, coaches has to accept.
+
+
+Prospect will have activity_id to list all Prospect to see details.
+Prospect will have assignment ID to see who get Prospect 
+
+
+
+Missing Points to Add
+1. User profile settings - consent,  theme, timezone, language etc
+2. Add user uuid to fixed table also to add their own content

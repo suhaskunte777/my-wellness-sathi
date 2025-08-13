@@ -87,3 +87,4 @@ Payload (create/update)
 - Show marketing level chips with colors.
 - On level change, backend may auto-assign groups; reflect after refresh.
 - Contacts/Addresses/Photos are managed via supporting flows.
+

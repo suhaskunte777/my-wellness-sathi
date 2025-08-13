@@ -64,3 +64,4 @@ Create/Update payload (tracker)
 - Coverage bar for today: entries / total active members.
 - Quick validate all pending (bulk) for today (coach scope).
 - Streak logic derived on backend or computed; show badge on member profile.
+

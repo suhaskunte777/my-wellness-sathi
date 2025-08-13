@@ -62,3 +62,4 @@ Covers embedded/linked UI for Contacts, Addresses, Photos, Groups, Marketing Lev
 - All embedded sections use dialogs/drawers.
 - Optimistic add/update with server confirmation.
 - Respect RBAC/ABAC for write operations.
+

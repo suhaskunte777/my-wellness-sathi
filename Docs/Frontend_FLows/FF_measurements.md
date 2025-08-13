@@ -61,3 +61,4 @@ Create/Update payload
 - Compute BMI client-side when height and weight provided; allow override.
 - Graphs: time series of weight, BMI, body fat per entity; delta arrows.
 - Comparison: highlight improvements in green, regressions in red.
+

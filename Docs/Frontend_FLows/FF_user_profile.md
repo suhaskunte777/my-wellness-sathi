@@ -31,3 +31,4 @@
 ### UX Notes
 - After profile update, refresh local profile and profile-details summary.
 - If multiple accounts on device, changes apply to active account only.
+

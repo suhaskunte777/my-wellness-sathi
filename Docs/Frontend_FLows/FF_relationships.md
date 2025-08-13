@@ -44,3 +44,4 @@ This document maps UI surfaces to server models and key relationships to guide n
 ### Offline-first Notes
 - Client generates `uuid` on create for user-generated records
 - Sync strategies: optimistic insert, reconcile on failure
+

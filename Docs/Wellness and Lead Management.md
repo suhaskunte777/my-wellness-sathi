@@ -43,6 +43,7 @@
   - [Implementation Status](#implementation-status)
     - [✅ Completed Features](#-completed-features)
     - [🚧 In Progress / Planned Features](#-in-progress--planned-features)
+  - [Activities](#activities)
 
 ## System Overview
 
@@ -808,45 +809,75 @@ Schema::create('daily_tracker_intakes', function (Blueprint $table) {
 - Email/SMS notification systems
 
 
-• Activities 
-• Active
-• TTP
-• Flyer
-• Survey 
-• Health Check Camp
-• Road Show
-• Afresh Party
-• MIW
-• Business Opportunity
-• Passive
-• Social Media Ads - Facebook,  Instagram,  X, Google, Yahoo, Bing, Other
-• Bulk Messaging
-• Bulk Emailing 
-• Poster - Wall / Auto / Banner
+## Activities
 
-Details to Capture
-- schedule & actual start Date & Time
-- schedule & actual end Date & Time
-- Location
-- Location Remark (if any)
-- Activity - enum
-- Activity Type  - enum
-- invites - (count of people you asked)
-- Accepted- (contact/healthcheck) 
-- Name of Participants (with role)
-- Prospect Distribution Method - Enum
+```php
+Schema::create('activities', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->string('name')->notNull();
+    $table->string('description')->nullable();
+    $table->dateTime('schedule_start_date_time')->nullable();
+    $table->dateTime('schedule_end_date_time')->nullable();
+    $table->string('location')->nullable();
+    $table->string('location_remark')->nullable();
+    $table->unsignedSmallInteger('invites')->nullable();
+    $table->unsignedSmallInteger('accepted')->nullable();
+    $table->enum('type', ['Group', 'Individual'])->default('Individual');
+    $table->enum('activity_type', ['TTP', 'Flyer', 'Survey', 'Health Check Camp', 'Road Show', 'Afresh Party', 'MIW', 'Business Opportunity', 'Social Media Ads', 'Bulk Messaging', 'Bulk Emailing', 'Poster'])->default('TTP');
+    $table->enum('activity_type_remark', ['major', 'minor', 'other'])->default('major');
+    $table->string('activity_type_remark_other')->nullable();
+    $table->enum('activity_status', ['Scheduled', 'Completed', 'Cancelled', 'Pending'])->default('Pending');
+    $table->string('activity_status_remark')->nullable();
+    $table->enum('prospect_distribution_method', ['only_COI_provider', 'equally_distributed', 'individual', 'other'])->default('only_COI_provider');
+    $table->string('other_distribution_method')->nullable();
+    $table->json('prospects')->nullable();
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade')->index();
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+});
+```
+
+```php
+Schema::create('activity_participants', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->foreignUuid('activity_uuid')->constrained('activities', 'uuid')->onDelete('cascade')->index();
+    $table->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade')->index();
+    $table->enum('status', ['Invited', 'Accepted', 'Rejected', 'Cancelled'])->default('Invited');
+    $table->string('status_remark')->nullable();
+    $table->enum('role', ['Creator', 'Participant', 'Scanning', 'Counseling', 'Invitee', 'Other', 'Learner'])->default('Participant');
+    $table->string('role_remark')->nullable();
+    $table->string('notes')->nullable();
+    $table->timestamps();
+    $table->softDeletes();
+});
+```
+
+```php
+Schema::table('prospects', function (Blueprint $table) {
+    $table->foreignUuid('activity_uuid')->nullable()->constrained('activities', 'uuid')->onDelete('cascade')->index();
+});
+```
 - Prospects Array (with assignment)
+
+
+```php
+// add  consent,  theme, timezone, language to user profile
+Schema::table('users', function (Blueprint $table) {
+    $table->boolean('consent')->default(false);
+    $table->string('theme')->default('system');
+    $table->string('timezone')->default('Asia/Kolkata');
+    $table->string('language')->default('en');
+});
+```
 
 
 If Activity type is Group, and Participant coaches are not under creator, then he has to share link to other coaches to participate.  And creater has to approve it.
 If coaches under creator, then he can send invites directly, coaches has to accept.
 
 
-Prospect will have activity_id to list all Prospect to see details.
-Prospect will have assignment ID to see who get Prospect 
-
 
 
 Missing Points to Add
-1. User profile settings - consent,  theme, timezone, language etc
-2. Add user uuid to fixed table also to add their own content
+1. Add user uuid to fixed table also to add their own content

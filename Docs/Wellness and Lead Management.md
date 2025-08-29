@@ -862,7 +862,7 @@ Schema::table('prospects', function (Blueprint $table) {
 - Prospects Array (with assignment)
 
 
-```php
+```php`
 // add  consent,  theme, timezone, language to user profile
 Schema::table('users', function (Blueprint $table) {
     $table->boolean('consent')->default(false);

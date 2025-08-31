@@ -40,10 +40,18 @@
     - [Addresses](#addresses)
     - [Photos](#photos)
     - [Health](#health)
+  - [Activities](#activities)
+  - [Stock Management System](#stock-management-system)
+    - [Core Concepts](#core-concepts)
+    - [Database Schema](#database-schema)
+    - [Key Features](#key-features)
+    - [Business Logic](#business-logic)
+    - [API Endpoints](#api-endpoints)
+  - [Club Management System](#club-management-system)
+      - [Shake Counter Implementation:](#shake-counter-implementation)
   - [Implementation Status](#implementation-status)
     - [✅ Completed Features](#-completed-features)
     - [🚧 In Progress / Planned Features](#-in-progress--planned-features)
-  - [Activities](#activities)
 
 ## System Overview
 
@@ -322,9 +330,107 @@ PUT /api/daily-trackers/{dailyTracker}
 DELETE /api/daily-trackers/{dailyTracker}
 GET /api/daily-trackers/by-date
 POST /api/daily-trackers/{dailyTracker}/validate
-DELETE /api/daily-trackers/{dailyTracker}
-GET /api/daily-trackers/by-date
-POST /api/daily-trackers/{dailyTracker}/validate
+
+// Product Management
+GET /api/products
+POST /api/products
+GET /api/products/{product}
+PUT /api/products/{product}
+DELETE /api/products/{product}
+
+// Stock Location Management
+GET /api/stock-locations
+POST /api/stock-locations
+GET /api/stock-locations/{stockLocation}
+PUT /api/stock-locations/{stockLocation}
+DELETE /api/stock-locations/{stockLocation}
+
+// Company Invoice Management
+GET /api/company-invoices
+POST /api/company-invoices
+GET /api/company-invoices/{invoice}
+PUT /api/company-invoices/{invoice}
+DELETE /api/company-invoices/{invoice}
+POST /api/company-invoices/{invoice}/verify
+
+// Invoice Items Management
+GET /api/invoice-items
+POST /api/invoice-items
+GET /api/invoice-items/{item}
+PUT /api/invoice-items/{item}
+DELETE /api/invoice-items/{item}
+GET /api/invoice-items/by-invoice/{invoiceUuid}
+
+// Stock Batch Management
+GET /api/stock-batches
+POST /api/stock-batches
+GET /api/stock-batches/{batch}
+PUT /api/stock-batches/{batch}
+DELETE /api/stock-batches/{batch}
+GET /api/stock-batches/by-location/{locationUuid}
+GET /api/stock-batches/by-product/{productUuid}
+GET /api/stock-batches/expiring-soon
+
+// Stock Movement Management
+GET /api/stock-movements
+POST /api/stock-movements
+GET /api/stock-movements/{movement}
+PUT /api/stock-movements/{movement}
+DELETE /api/stock-movements/{movement}
+GET /api/stock-movements/by-location/{locationUuid}
+GET /api/stock-movements/by-type/{type}
+POST /api/stock-movements/{movement}/approve
+
+// Stock Reservation Management
+GET /api/stock-reservations
+POST /api/stock-reservations
+GET /api/stock-reservations/{reservation}
+PUT /api/stock-reservations/{reservation}
+DELETE /api/stock-reservations/{reservation}
+GET /api/stock-reservations/by-customer/{customerUuid}
+POST /api/stock-reservations/{reservation}/fulfill
+
+// Stock Valuation Management
+GET /api/stock-valuations
+POST /api/stock-valuations
+GET /api/stock-valuations/{valuation}
+PUT /api/stock-valuations/{valuation}
+DELETE /api/stock-valuations/{valuation}
+GET /api/stock-valuations/by-location/{locationUuid}
+GET /api/stock-valuations/profit-loss-report
+
+// Club Management
+GET /api/clubs
+POST /api/clubs
+GET /api/clubs/{club}
+PUT /api/clubs/{club}
+DELETE /api/clubs/{club}
+GET /api/clubs/by-owner/{ownerId}
+
+// Club Memberships Management
+GET /api/club-memberships
+POST /api/club-memberships
+GET /api/club-memberships/{clubMembership}
+PUT /api/club-memberships/{clubMembership}
+DELETE /api/club-memberships/{clubMembership}
+GET /api/club-memberships/by-club/{clubId}
+GET /api/club-memberships/by-user/{userId}
+
+// Shake Combinations Management
+GET /api/shake-combinations
+POST /api/shake-combinations
+GET /api/shake-combinations/{shakeCombination}
+PUT /api/shake-combinations/{shakeCombination}
+DELETE /api/shake-combinations/{shakeCombination}
+
+// Club Shake Counter Management
+GET /api/club-shake-counter
+POST /api/club-shake-counter
+GET /api/club-shake-counter/{clubShakeCounter}
+PUT /api/club-shake-counter/{clubShakeCounter}
+DELETE /api/club-shake-counter/{clubShakeCounter}
+GET /api/club-shake-counter/by-club/{clubId}
+GET /api/club-shake-counter/by-date/{date}
 ```
 
 ## Prospect and Related Migrations
@@ -725,90 +831,6 @@ Schema::create('daily_tracker_intakes', function (Blueprint $table) {
 });
 ```
 
-## Implementation Status
-
-### ✅ Completed Features
-
-**Backend Infrastructure:**
-- Laravel 12 with PHP 8.4 setup
-- Laravel Sanctum authentication
-- Spatie Laravel Permission for RBAC
-- Laravel Auditing for audit trails
-- Laravel Telescope for debugging
-- Laravel Horizon for queue management
-- Laravel Pulse for application monitoring
-- Laravel Backup for data backup
-- Development tools: Laravel Pint, Larastan, PHPUnit, Laravel IDE Helper
-
-**Database Migrations:**
-- Users table with UUID primary keys
-- Prospects table with all required fields
-- Profile Details table with marketing level hierarchy
-- Health Data table for user/prospect health information
-- Measurements table for tracking body metrics
-- Daily Trackers table for wellness tracking
-- Groups table for user categorization
-- Marketing Levels table for business hierarchy
-- Contacts table for multiple contact methods
-- Addresses table for location management
-- Photos table for media storage
-
-**API Endpoints:**
-- Authentication: register, login, logout, forgot-password, forgot-username, reset-password, email verification
-- Prospect management: full CRUD with conversion functionality
-- Profile details management: full CRUD with prospect conversion
-- Health data management: full CRUD operations
-- Measurement management: full CRUD operations
-- Daily tracker management: full CRUD with validation
-
-**Models & Relationships:**
-- User model with UUID support and auditing
-- Prospect model with polymorphic relationships
-- ProfileDetail model with marketing level hierarchy
-- HealthData model with polymorphic relationships
-- Measurement model with polymorphic relationships
-- DailyTracker model with validation support
-- All models include proper relationships and soft deletes
-
-**Role-Based Access Control:**
-- Super Admin: Full system access
-- Mentor: Create/update/delete all records
-- Coach: Create own, update own/all, delete own
-- Member: Create/update/delete own records
-- Guest: Read-only access (ABAC controlled)
-
-### 🚧 In Progress / Planned Features
-
-**Frontend Development:**
-- Quasar framework setup
-- Vue.js 4 components
-- Pinia store management
-- User interface for all CRUD operations
-- Profile switching functionality
-- Dark mode support
-
-**Additional Backend Features:**
-- Club management system
-- Stock and inventory management
-- Financial tracking and reporting
-- Assessment and survey tools
-- Product/Service/Program/Batch management
-- Communication and notification systems
-- Advanced ABAC implementation with tags
-
-**Security Enhancements:**
-- Password policy enforcement
-- Token expiration management
-- Rate limiting implementation
-- Advanced audit trail features
-
-**Integration Features:**
-- Photo compression and storage optimization
-- Address validation services
-- Google Maps integration
-- Email/SMS notification systems
-
-
 ## Activities
 
 ```php
@@ -862,7 +884,7 @@ Schema::table('prospects', function (Blueprint $table) {
 - Prospects Array (with assignment)
 
 
-```php`
+```php
 // add  consent,  theme, timezone, language to user profile
 Schema::table('users', function (Blueprint $table) {
     $table->boolean('consent')->default(false);
@@ -876,8 +898,606 @@ Schema::table('users', function (Blueprint $table) {
 If Activity type is Group, and Participant coaches are not under creator, then he has to share link to other coaches to participate.  And creater has to approve it.
 If coaches under creator, then he can send invites directly, coaches has to accept.
 
-
-
-
 Missing Points to Add
 1. Add user uuid to fixed table also to add their own content
+
+## Stock Management System
+
+### Core Concepts
+The stock management system handles:
+1. **Stock Receipt**: Stock received from company via invoices (99% of cases)
+2. **Stock Consumption**: Personal consumption, sales to guests/customers, club usage, losses, etc.
+3. **Batch Tracking**: Different price batches for same product (e.g., last year's stock vs current year)
+4. **Profit Calculation**: Based on actual purchase price vs selling price using FIFO/LIFO methods
+
+### Database Schema
+
+```php
+// Products table (unchanged - master product catalog)
+Schema::create('products', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->string('sku')->unique();
+    $table->string('name')->index();
+    $table->decimal('volume_points', 8, 2);
+    $table->decimal('earn_base', 8, 2);
+    $table->decimal('base_price', 10, 2);
+    $table->decimal('tax_percentage', 5, 2);
+    $table->decimal('mrp', 10, 2);
+    $table->decimal('discount_15_price', 10, 2);
+    $table->decimal('discount_25_price', 10, 2);
+    $table->decimal('discount_35_price', 10, 2);
+    $table->decimal('discount_42_price', 10, 2);
+    $table->decimal('discount_50_price', 10, 2);
+    $table->string('unit', 50);
+    $table->decimal('vp_per_unit', 8, 2);
+    $table->date('price_release_date');
+    $table->boolean('is_active')->default(true);
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+});
+
+// Product price history (unchanged)
+Schema::create('product_histories', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->foreignUuid('product_id')->constrained('products', 'uuid')->onDelete('cascade');
+    $table->string('sku');
+    $table->string('name');
+    $table->decimal('volume_points', 8, 2);
+    $table->decimal('earn_base', 8, 2);
+    $table->decimal('base_price', 10, 2);
+    $table->decimal('tax_percentage', 5, 2);
+    $table->decimal('mrp', 10, 2);
+    $table->decimal('discount_15_price', 10, 2);
+    $table->decimal('discount_25_price', 10, 2);
+    $table->decimal('discount_35_price', 10, 2);
+    $table->decimal('discount_42_price', 10, 2);
+    $table->decimal('discount_50_price', 10, 2);
+    $table->string('unit', 50);
+    $table->decimal('vp_per_unit', 8, 2);
+    $table->date('price_release_date');
+    $table->boolean('is_active')->default(true);
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+});
+
+// Stock locations (unchanged)
+Schema::create('stock_locations', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->string('name');
+    $table->enum('type', ['club', 'club_physical', 'club_virtual', 'coach', 'member', 'warehouse', 'Other']);
+    $table->foreignUuid('owner_uuid')->constrained('users', 'uuid')->onDelete('cascade')->index();
+    $table->text('address')->nullable();
+    $table->boolean('is_active')->default(true);
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+});
+
+// NEW: Company invoices (for stock receipt tracking)
+Schema::create('company_invoices', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->string('invoice_number')->unique();
+    $table->date('invoice_date');
+    $table->date('received_date');
+    $table->decimal('total_amount', 12, 2);
+    $table->decimal('total_tax', 10, 2)->default(0);
+    $table->decimal('total_volume_points', 10, 2)->default(0);
+    $table->enum('status', ['pending', 'received', 'verified', 'cancelled'])->default('pending');
+    $table->text('notes')->nullable();
+    $table->foreignUuid('received_by')->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('verified_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamp('verified_at')->nullable();
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+    
+    // Performance indexes
+    $table->index(['invoice_date']);
+    $table->index(['received_date']);
+    $table->index(['status']);
+    $table->index(['received_by']);
+});
+
+// NEW: Invoice items (individual products in invoice)
+Schema::create('invoice_items', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->foreignUuid('invoice_uuid')->constrained('company_invoices', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('product_uuid')->constrained('products', 'uuid')->onDelete('cascade');
+    $table->decimal('quantity', 10, 2);
+    $table->decimal('unit_price', 10, 2);
+    $table->decimal('total_price', 12, 2);
+    $table->decimal('tax_amount', 10, 2)->default(0);
+    $table->decimal('volume_points', 8, 2)->default(0);
+    $table->string('batch_number')->nullable(); // Company batch number
+    $table->date('expiry_date')->nullable();
+    $table->text('notes')->nullable();
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+    
+    // Performance indexes
+    $table->index(['invoice_uuid']);
+    $table->index(['product_uuid']);
+    $table->index(['batch_number']);
+    $table->index(['expiry_date']);
+});
+
+// REVISED: Stocks (main stock table for each SKU at each location)
+Schema::create('stocks', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->foreignUuid('product_uuid')->constrained('products', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('location_uuid')->constrained('stock_locations', 'uuid')->onDelete('cascade');
+    $table->decimal('total_quantity', 10, 2)->default(0); // Total stock available
+    $table->decimal('reserved_quantity', 10, 2)->default(0); // Reserved for **orders**
+    $table->decimal('average_cost', 10, 2)->default(0); // Weighted average cost
+    $table->decimal('total_value', 12, 2)->default(0); // Total stock value
+    $table->date('last_updated')->nullable();
+    $table->text('notes')->nullable();
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+    
+    // Performance indexes
+    $table->unique(['product_uuid', 'location_uuid']); // One stock record per product per location
+    $table->index(['product_uuid']);
+    $table->index(['location_uuid']);
+    $table->index(['available_quantity']);
+    $table->index(['last_updated']);
+});
+
+// NEW: Stock items (detailed tracking of individual stock receipts)
+Schema::create('stock_items', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->foreignUuid('stock_uuid')->constrained('stocks', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('invoice_item_uuid')->constrained('invoice_items', 'uuid')->onDelete('cascade');
+    $table->string('batch_number')->nullable(); // Company batch number
+    $table->decimal('purchase_price', 10, 2); // Actual purchase price from invoice
+    $table->decimal('initial_quantity', 10, 2); // Initial quantity received
+    $table->decimal('remaining_quantity', 10, 2); // Current remaining quantity
+    $table->date('purchase_date'); // Date from invoice
+    $table->date('expiry_date')->nullable();
+    $table->enum('status', ['active', 'expired', 'depleted'])->default('active');
+    $table->text('notes')->nullable();
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+    
+    // Performance indexes
+    $table->index(['stock_uuid']);
+    $table->index(['batch_number']);
+    $table->index(['purchase_date']);
+    $table->index(['expiry_date']);
+    $table->index(['status']);
+    $table->index(['remaining_quantity']);
+});
+
+// REVISED: Stock movements (detailed tracking of all stock movements)
+Schema::create('stock_movements', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->enum('movement_type', [
+        'receipt',           // Stock received from company
+        'transfer',          // Transfer between locations
+        'sale_guest',        // Sale to new guest
+        'sale_customer',     // Sale to existing customer
+        'personal_consumption', // Personal use
+        'club_consumption',  // Club usage
+        'loss',              // Lost/damaged
+        'expired',           // Expired stock
+        'adjustment',        // Manual adjustment
+        'reservation',       // Reserve for order
+        'unreservation'      // Cancel reservation
+    ]);
+    $table->foreignUuid('stock_uuid')->constrained('stocks', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('stock_item_uuid')->nullable()->constrained('stock_items', 'uuid')->onDelete('cascade'); // For FIFO tracking
+    $table->foreignUuid('from_location_uuid')->nullable()->constrained('stock_locations', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('to_location_uuid')->nullable()->constrained('stock_locations', 'uuid')->onDelete('cascade');
+    $table->decimal('quantity', 10, 2);
+    $table->decimal('unit_price', 10, 2); // Price at time of movement
+    $table->decimal('total_amount', 12, 2);
+    $table->decimal('profit_loss', 12, 2)->nullable(); // For sales: selling_price - purchase_price
+    
+    // Reference tracking
+    $table->string('reference_type', 100)->nullable(); // 'order', 'club_consumption', 'shake_counter', 'invoice'
+    $table->string('reference_uuid', 36)->nullable();
+    
+    // Customer/User tracking for sales
+    $table->foreignUuid('customer_uuid')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('club_uuid')->nullable()->constrained('clubs', 'uuid')->onDelete('cascade');
+    
+    // Approval workflow
+    $table->foreignUuid('performed_by')->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('approved_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamp('approved_at')->nullable();
+    $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending');
+    
+    $table->text('notes')->nullable();
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+    
+    // Performance indexes
+    $table->index(['movement_type']);
+    $table->index(['stock_uuid']);
+    $table->index(['stock_item_uuid']);
+    $table->index(['from_location_uuid']);
+    $table->index(['to_location_uuid']);
+    $table->index(['customer_uuid']);
+    $table->index(['club_uuid']);
+    $table->index(['performed_by']);
+    $table->index(['status']);
+    $table->index(['reference_type', 'reference_uuid']);
+});
+
+// NEW: Stock reservations (for pending orders)
+Schema::create('stock_reservations', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->foreignUuid('stock_uuid')->constrained('stocks', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('customer_uuid')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->decimal('quantity', 10, 2);
+    $table->date('reserved_until');
+    $table->enum('status', ['active', 'fulfilled', 'expired', 'cancelled'])->default('active');
+    $table->text('notes')->nullable();
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+    
+    // Performance indexes
+    $table->index(['stock_uuid']);
+    $table->index(['customer_uuid']);
+    $table->index(['reserved_until']);
+    $table->index(['status']);
+});
+
+// NEW: Stock valuation (for profit/loss tracking)
+Schema::create('stock_valuations', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->foreignUuid('location_uuid')->constrained('stock_locations', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('product_uuid')->constrained('products', 'uuid')->onDelete('cascade');
+    $table->decimal('total_quantity', 10, 2);
+    $table->decimal('average_cost', 10, 2); // Weighted average cost
+    $table->decimal('total_value', 12, 2);
+    $table->decimal('market_value', 12, 2); // Current market value
+    $table->decimal('unrealized_profit_loss', 12, 2); // Market value - Total value
+    $table->date('valuation_date');
+    $table->text('notes')->nullable();
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+    
+    // Performance indexes
+    $table->index(['location_uuid']);
+    $table->index(['product_uuid']);
+    $table->index(['valuation_date']);
+    $table->unique(['location_uuid', 'product_uuid', 'valuation_date']);
+});
+```
+
+### Key Features
+
+1. **Invoice-Based Stock Receipt**
+   - Track complete invoices from company
+   - Multiple products per invoice
+   - Batch/lot tracking with expiry dates
+
+2. **Stock-Level Inventory Management**
+   - Main stock table tracks total quantity and average cost
+   - Stock items track individual receipts with purchase prices
+   - FIFO consumption from stock items for accurate profit calculation
+   - Expiry date tracking at stock item level
+
+3. **Detailed Movement Tracking**
+   - All stock movements are tracked with source and destination
+   - Profit/loss calculation for sales
+   - Reference tracking for orders, club usage, etc.
+
+4. **Reservation System**
+   - Reserve stock for pending orders
+   - Prevent overselling
+   - Automatic expiration of reservations
+
+5. **Valuation and Reporting**
+   - Real-time stock valuation
+   - Profit/loss tracking
+   - Market value vs cost value
+
+### Business Logic
+
+1. **Stock Receipt Process**
+   - Create company invoice
+   - Add invoice items with quantities and prices
+   - System creates stock batches automatically
+   - Update location stock levels
+
+2. **Stock Consumption (FIFO Method)**
+   - System consumes oldest stock items first
+   - Calculate profit based on actual purchase price from stock items
+   - Update stock quantities and stock item quantities
+   - Track movement history with stock item reference
+
+3. **Profit Calculation**
+   - Selling Price - Purchase Price = Profit/Loss
+   - Track profit by batch
+   - Aggregate profit reports
+
+4. **Stock Transfers**
+   - Move stock between locations
+   - Maintain stock item integrity for FIFO tracking
+   - Update location stock levels
+
+### API Endpoints
+
+```php
+// Company Invoice Management
+GET /api/company-invoices
+POST /api/company-invoices
+GET /api/company-invoices/{invoice}
+PUT /api/company-invoices/{invoice}
+DELETE /api/company-invoices/{invoice}
+POST /api/company-invoices/{invoice}/verify
+
+// Invoice Items Management
+GET /api/invoice-items
+POST /api/invoice-items
+GET /api/invoice-items/{item}
+PUT /api/invoice-items/{item}
+DELETE /api/invoice-items/{item}
+GET /api/invoice-items/by-invoice/{invoiceUuid}
+
+// Stock Batch Management
+GET /api/stock-batches
+POST /api/stock-batches
+GET /api/stock-batches/{batch}
+PUT /api/stock-batches/{batch}
+DELETE /api/stock-batches/{batch}
+GET /api/stock-batches/by-location/{locationUuid}
+GET /api/stock-batches/by-product/{productUuid}
+GET /api/stock-batches/expiring-soon
+
+// Stock Movement Management
+GET /api/stock-movements
+POST /api/stock-movements
+GET /api/stock-movements/{movement}
+PUT /api/stock-movements/{movement}
+DELETE /api/stock-movements/{movement}
+GET /api/stock-movements/by-location/{locationUuid}
+GET /api/stock-movements/by-type/{type}
+POST /api/stock-movements/{movement}/approve
+
+// Stock Reservation Management
+GET /api/stock-reservations
+POST /api/stock-reservations
+GET /api/stock-reservations/{reservation}
+PUT /api/stock-reservations/{reservation}
+DELETE /api/stock-reservations/{reservation}
+GET /api/stock-reservations/by-customer/{customerUuid}
+POST /api/stock-reservations/{reservation}/fulfill
+
+// Stock Valuation Management
+GET /api/stock-valuations
+POST /api/stock-valuations
+GET /api/stock-valuations/{valuation}
+PUT /api/stock-valuations/{valuation}
+DELETE /api/stock-valuations/{valuation}
+GET /api/stock-valuations/by-location/{locationUuid}
+GET /api/stock-valuations/profit-loss-report
+```
+
+
+## Club Management System
+
+```php
+Schema::create('clubs', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->string('name');
+    $table->string('tagline', 500)->nullable();
+    $table->enum('club_type', ['UMS', 'Centralise', '2_Time_UMS', '2_Time_Centralise']);
+    $table->enum('club_mode', ['Offline', 'Online', 'Hybrid', '2_Time_Offline', 'Hybrid_with_2_Time_Online']);
+    $table->date('start_date');
+    $table->boolean('is_active')->default(true);
+    $table->foreignUuid('owner_id')->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+    
+    // Performance indexes
+    $table->index(['owner_id']);
+    $table->index(['is_active']);
+});
+
+Schema::create('club_memberships', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->foreignUuid('club_uuid')->constrained('clubs', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade');
+    $table->enum('association_type', ['Membership', 'Kit_Plus_Fee', 'Owner', 'Guest', 'Only_excercise', 'excercise_afresh']);
+    $table->decimal('membership_fee', 10, 2)->nullable();
+    $table->timestamp('joined_at')->useCurrent();
+    $table->timestamp('expires_at')->nullable();
+    $table->boolean('is_active')->default(true);
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+    
+    // Performance indexes
+    $table->index(['club_uuid']);
+    $table->index(['user_uuid']);
+    $table->index(['expires_at']);
+});
+```
+
+#### Shake Counter Implementation:
+```php
+Schema::create('shake_combinations', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->string('name');
+    $table->unsignedInteger('serving_size')->default(1);
+    $table->foreignUuid('flavor_1_product_id')->nullable()->constrained('products', 'uuid')->onDelete('cascade');
+    $table->decimal('flavor_1_quantity', 5, 2)->nullable();
+    $table->foreignUuid('flavor_2_product_id')->nullable()->constrained('products', 'uuid')->onDelete('cascade');
+    $table->decimal('flavor_2_quantity', 5, 2)->nullable();
+    $table->foreignUuid('flavor_3_product_id')->nullable()->constrained('products', 'uuid')->onDelete('cascade');
+    $table->decimal('flavor_3_quantity', 5, 2)->nullable();
+    $table->decimal('shakemate_quantity', 5, 2)->nullable();
+    $table->decimal('protein_quantity', 5, 2)->nullable();
+    $table->decimal('water_quantity', 5, 2)->nullable();
+    $table->decimal('ice_quantity', 5, 2)->nullable();
+    $table->text('notes')->nullable();
+    $table->foreignUuid('created_by')->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+    
+    // Performance indexes
+    $table->index(['created_by']);
+});
+
+Schema::create('club_shake_counter', function (Blueprint $table) {
+    $table->uuid('uuid')->primary();
+    $table->foreignUuid('club_id')->constrained('clubs', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('member_id')->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('shake_combination_id')->constrained('shake_combinations', 'uuid')->onDelete('cascade');
+    $table->timestamp('first_serving_at')->nullable();
+    $table->timestamp('refill_serving_at')->nullable();
+    $table->foreignUuid('counter_operator_id')->constrained('users', 'uuid')->onDelete('cascade');
+    $table->date('date');
+    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $table->timestamps();
+    $table->softDeletes();
+    
+    // Performance indexes
+    $table->index(['club_id']);
+    $table->index(['member_id']);
+    $table->index(['date']);
+    $table->index(['counter_operator_id']);
+});
+```
+
+
+
+
+
+## Implementation Status
+
+### ✅ Completed Features
+
+**Backend Infrastructure:**
+- Laravel 12 with PHP 8.4 setup
+- Laravel Sanctum authentication
+- Spatie Laravel Permission for RBAC
+- Laravel Auditing for audit trails
+- Laravel Telescope for debugging
+- Laravel Horizon for queue management
+- Laravel Pulse for application monitoring
+- Laravel Backup for data backup
+- Development tools: Laravel Pint, Larastan, PHPUnit, Laravel IDE Helper
+
+**Database Migrations:**
+- Users table with UUID primary keys
+- Prospects table with all required fields
+- Profile Details table with marketing level hierarchy
+- Health Data table for user/prospect health information
+- Measurements table for tracking body metrics
+- Daily Trackers table for wellness tracking
+- Groups table for user categorization
+- Marketing Levels table for business hierarchy
+- Contacts table for multiple contact methods
+- Addresses table for location management
+- Photos table for media storage
+
+**API Endpoints:**
+- Authentication: register, login, logout, forgot-password, forgot-username, reset-password, email verification
+- Prospect management: full CRUD with conversion functionality
+- Profile details management: full CRUD with prospect conversion
+- Health data management: full CRUD operations
+- Measurement management: full CRUD operations
+- Daily tracker management: full CRUD with validation
+
+**Models & Relationships:**
+- User model with UUID support and auditing
+- Prospect model with polymorphic relationships
+- ProfileDetail model with marketing level hierarchy
+- HealthData model with polymorphic relationships
+- Measurement model with polymorphic relationships
+- DailyTracker model with validation support
+- All models include proper relationships and soft deletes
+
+**New Models Required:**
+- Product model with UUID support and auditing
+- CompanyInvoice model with UUID support and auditing
+- InvoiceItem model with UUID support and auditing
+- StockLocation model with UUID support and auditing
+- Stock model with UUID support and auditing
+- StockItem model with UUID support and auditing
+- StockMovement model with UUID support and auditing
+- StockReservation model with UUID support and auditing
+- StockValuation model with UUID support and auditing
+- Club model with UUID support and auditing
+- ClubMembership model with UUID support and auditing
+- ShakeCombination model with UUID support and auditing
+- ClubShakeCounter model with UUID support and auditing
+
+**Role-Based Access Control:**
+- Super Admin: Full system access
+- Mentor: Create/update/delete all records
+- Coach: Create own, update own/all, delete own
+- Member: Create/update/delete own records
+- Guest: Read-only access (ABAC controlled)
+
+**Frontend Development:**
+- Quasar framework setup
+- Vue.js 4 components
+- Pinia store management
+- User interface for all CRUD operations
+- Profile switching functionality
+- Dark mode support
+
+### 🚧 In Progress / Planned Features
+
+**Additional Backend Features:**
+- Club management system (✅ Schema defined)
+- Stock and inventory management (✅ Schema defined)
+- Financial tracking and reporting
+- Assessment and survey tools
+- Product/Service/Program/Batch management (✅ Schema defined)
+- Communication and notification systems
+- Advanced ABAC implementation with tags
+
+**Security Enhancements:**
+- Password policy enforcement
+- Token expiration management
+- Rate limiting implementation
+- Advanced audit trail features
+
+**Integration Features:**
+- Photo compression and storage optimization
+- Address validation services
+- Google Maps integration
+- Email/SMS notification systems

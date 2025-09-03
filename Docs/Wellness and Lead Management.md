@@ -49,6 +49,46 @@
     - [API Endpoints](#api-endpoints)
   - [Club Management System](#club-management-system)
       - [Shake Counter Implementation:](#shake-counter-implementation)
+  - [Calendar Management System](#calendar-management-system)
+    - [Core Concepts](#core-concepts-1)
+    - [Database Schema](#database-schema-1)
+      - [Calendar Events](#calendar-events)
+      - [Calendar Participants](#calendar-participants)
+      - [External Calendar Integrations](#external-calendar-integrations)
+      - [Time Tracking System](#time-tracking-system)
+      - [Time Tracking Preferences](#time-tracking-preferences)
+    - [Recurrence Patterns](#recurrence-patterns)
+      - [Supported Recurrence Types:](#supported-recurrence-types)
+      - [Recurrence Rule Examples:](#recurrence-rule-examples)
+    - [Key Features](#key-features-1)
+      - [1. Calendar Integration](#1-calendar-integration)
+      - [2. Smart Scheduling](#2-smart-scheduling)
+      - [3. Time Tracking](#3-time-tracking)
+      - [4. Event Types and Integration](#4-event-types-and-integration)
+      - [5. Notifications and Reminders](#5-notifications-and-reminders)
+      - [6. Reporting and Analytics](#6-reporting-and-analytics)
+    - [API Endpoints](#api-endpoints-1)
+      - [Calendar Events](#calendar-events-1)
+      - [External Calendar Integration](#external-calendar-integration)
+      - [Time Tracking](#time-tracking)
+      - [Calendar Views and Reports](#calendar-views-and-reports)
+    - [Business Logic](#business-logic-1)
+      - [1. Event Creation and Management](#1-event-creation-and-management)
+      - [2. Recurrence Handling](#2-recurrence-handling)
+      - [3. External Calendar Sync](#3-external-calendar-sync)
+      - [4. Time Tracking Integration](#4-time-tracking-integration)
+      - [5. Notification System](#5-notification-system)
+    - [Frontend Integration](#frontend-integration)
+      - [Calendar Views](#calendar-views)
+      - [Time Tracking Interface](#time-tracking-interface)
+      - [Integration Features](#integration-features)
+    - [Security and Permissions](#security-and-permissions)
+      - [Access Control](#access-control)
+      - [Data Privacy](#data-privacy)
+    - [Implementation Phases](#implementation-phases)
+      - [Phase 1: Core Calendar (Weeks 1-4)](#phase-1-core-calendar-weeks-1-4)
+      - [Phase 2: Advanced Features (Weeks 5-8)](#phase-2-advanced-features-weeks-5-8)
+      - [Phase 3: Integration \& Analytics (Weeks 9-12)](#phase-3-integration--analytics-weeks-9-12)
   - [Implementation Status](#implementation-status)
     - [✅ Completed Features](#-completed-features)
     - [🚧 In Progress / Planned Features](#-in-progress--planned-features)
@@ -158,24 +198,24 @@ A comprehensive wellness industry platform serving four primary user types:
 
 ### Core User Migration
 ```php
-Schema::create('users', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('name');
-    $table->date('birth_date');
-    $table->string('herbalife_id')->nullable();
-    $table->boolean('business_owner')->default(0);
-    $table->string('username')->unique();
-    $table->string('email');
-    $table->timestamp('email_verified_at')->nullable();
-    $table->string('mobile');
-    $table->timestamp('mobile_verified_at')->nullable();
-    $table->string('password');
-    $table->boolean('is_admin')->default(false);
-    $table->foreignUuid('invited_by')->nullable()->constrained('users', 'uuid')->onDelete('set null');
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->rememberToken();
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('users', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('name');
+    $t->date('birth_date');
+    $t->string('herbalife_id')->nullable();
+    $t->boolean('business_owner')->default(0);
+    $t->string('username')->unique();
+    $t->string('email');
+    $t->timestamp('email_verified_at')->nullable();
+    $t->string('mobile');
+    $t->timestamp('mobile_verified_at')->nullable();
+    $t->string('password');
+    $t->boolean('is_admin')->default(false);
+    $t->foreignUuid('invited_by')->nullable()->constrained('users', 'uuid')->onDelete('set null');
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->rememberToken();
+    $t->timestamps();
+    $t->softDeletes();
 });
 ```
 
@@ -187,25 +227,25 @@ Schema::create('users', function (Blueprint $table) {
 
 ### Laravel Sanctum Migration
 ```php
-Schema::create('personal_access_tokens', function (Blueprint $table) {
-    $table->id();
-    $table->morphs('tokenable');
-    $table->string('name');
-    $table->string('type');
-    $table->string('hash', 64)->unique();
-    $table->text('abilities')->nullable();
-    $table->timestamp('last_used_at')->nullable();
-    $table->timestamp('expires_at')->nullable();
-    $table->timestamps();
+Schema::create('personal_access_tokens', function (Blueprint $t) {
+    $t->id();
+    $t->morphs('tokenable');
+    $t->string('name');
+    $t->string('type');
+    $t->string('hash', 64)->unique();
+    $t->text('abilities')->nullable();
+    $t->timestamp('last_used_at')->nullable();
+    $t->timestamp('expires_at')->nullable();
+    $t->timestamps();
 });
 ```
 
 ### Password Reset Migration
 ```php
-Schema::create('password_reset_tokens', function (Blueprint $table) {
-    $table->string('username')->primary();
-    $table->string('token');
-    $table->timestamp('created_at')->nullable();
+Schema::create('password_reset_tokens', function (Blueprint $t) {
+    $t->string('username')->primary();
+    $t->string('token');
+    $t->timestamp('created_at')->nullable();
 });
 ```
 
@@ -436,50 +476,50 @@ GET /api/club-shake-counter/by-date/{date}
 ## Prospect and Related Migrations
 
 ```php
-Schema::create('prospects', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('name');
-    $table->string('primary_phone')->nullable();
-    $table->date('birth_date')->nullable();
-    $table->unsignedSmallInteger('birth_year')->nullable();
-    $table->unsignedTinyInteger('age')->nullable();
-    $table->enum('age_by', ['birth_date', 'birth_year', 'age'])->nullable();
-    $table->unsignedTinyInteger('height')->nullable();
-    $table->enum('gender', ['male', 'female', 'other'])->nullable();
-    $table->enum('marital_status', ['single', 'married', 'divorced', 'widowed'])->nullable();
-    $table->enum('occupation', ['student', 'employed', 'unemployed', 'retired', 'housewife', 'other'])->nullable();
-    $table->string('mother_tongue', 25)->nullable();
-    $table->enum('source', ['TTP', 'Assessment', 'Measurement_Camp', 'Referral', 'Paper_Insert', 'Circular_of_Influence', 'Social_Media', 'Advertisement', 'Walk_In', 'Other'])->nullable();
-    $table->string('source_details', 191)->nullable();
-    $table->enum('lead_stage', ['New', 'Contacted', 'Interested', 'Qualified', 'Converted', 'Lost', 'Hold', 'Archived'])->nullable();
-    $table->string('referred_by', 36)->nullable();
-    $table->string('notes')->nullable();
-    $table->date('last_follow_up_date')->nullable();
-    $table->date('next_follow_up_date')->nullable();
+Schema::create('prospects', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('name');
+    $t->string('primary_phone')->nullable();
+    $t->date('birth_date')->nullable();
+    $t->unsignedSmallInteger('birth_year')->nullable();
+    $t->unsignedTinyInteger('age')->nullable();
+    $t->enum('age_by', ['birth_date', 'birth_year', 'age'])->nullable();
+    $t->unsignedTinyInteger('height')->nullable();
+    $t->enum('gender', ['male', 'female', 'other'])->nullable();
+    $t->enum('marital_status', ['single', 'married', 'divorced', 'widowed'])->nullable();
+    $t->enum('occupation', ['student', 'employed', 'unemployed', 'retired', 'housewife', 'other'])->nullable();
+    $t->string('mother_tongue', 25)->nullable();
+    $t->enum('source', ['TTP', 'Assessment', 'Measurement_Camp', 'Referral', 'Paper_Insert', 'Circular_of_Influence', 'Social_Media', 'Advertisement', 'Walk_In', 'Other'])->nullable();
+    $t->string('source_details', 191)->nullable();
+    $t->enum('lead_stage', ['New', 'Contacted', 'Interested', 'Qualified', 'Converted', 'Lost', 'Hold', 'Archived'])->nullable();
+    $t->string('referred_by', 36)->nullable();
+    $t->string('notes')->nullable();
+    $t->date('last_follow_up_date')->nullable();
+    $t->date('next_follow_up_date')->nullable();
 
-    $table->string('health_challenge', 255)->nullable();
-    $table->string('medication', 255)->nullable();
-    $table->string('health_goal', 255)->nullable();
+    $t->string('health_challenge', 255)->nullable();
+    $t->string('medication', 255)->nullable();
+    $t->string('health_goal', 255)->nullable();
     
-    $table->unsignedTinyInteger('conversion_probability')->nullable();
-    $table->string('converted_to_user_uuid', 36)->nullable();
-    $table->timestamp('converted_at')->nullable();
-    $table->boolean('is_active')->default(true);
+    $t->unsignedTinyInteger('conversion_probability')->nullable();
+    $t->string('converted_to_user_uuid', 36)->nullable();
+    $t->timestamp('converted_at')->nullable();
+    $t->boolean('is_active')->default(true);
 
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('coach_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('coach_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
 
-    $table->timestamps();
-    $table->softDeletes();
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['lead_stage', 'is_active']);
-    $table->index(['coach_id', 'is_active']);
-    $table->index(['created_by', 'is_active']);
-    $table->index(['next_follow_up_date']);
-    $table->index(['converted_to_user_uuid']);
+    $t->index(['lead_stage', 'is_active']);
+    $t->index(['coach_id', 'is_active']);
+    $t->index(['created_by', 'is_active']);
+    $t->index(['next_follow_up_date']);
+    $t->index(['converted_to_user_uuid']);
 });
 ```
 
@@ -488,87 +528,87 @@ Schema::create('prospects', function (Blueprint $table) {
 
 ### Profile Details
 ```php
-Schema::create('profile_details', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade');
-    $table->string('first_name', 191)->nullable();
-    $table->string('middle_name', 191)->nullable();
-    $table->string('last_name', 191)->nullable();
-    $table->string('primary_email', 50)->nullable();
-    $table->string('primary_phone', 18)->nullable();
-    $table->date('birth_date')->nullable();
-    $table->unsignedSmallInteger('birth_year')->nullable();
-    $table->unsignedTinyInteger('age')->nullable();
-    $table->enum('age_by', ['birth_date', 'birth_year', 'age'])->nullable();
-    $table->enum('gender', ['male', 'female', 'other'])->nullable();
-    $table->enum('marital_status', ['single', 'married', 'divorced', 'widowed'])->nullable();
-    $table->enum('source', ['TTP', 'Assessment', 'Measurement_Camp', 'Referral', 'Paper_Insert', 'Circular_of_Influence', 'Social_Media', 'Advertisement', 'Walk_In', 'Other'])->nullable();
-    $table->string('source_details', 191)->nullable();
-    $table->string('occupation', 191)->nullable();
-    $table->string('mother_tongue', 25)->nullable();
-    $table->string('notes')->nullable();
-    $table->date('last_follow_up_date')->nullable();
-    $table->date('next_follow_up_date')->nullable();
-    $table->string('converted_from_prospect_uuid', 36)->nullable();
-    $table->timestamp('converted_at')->nullable();
+Schema::create('profile_details', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade');
+    $t->string('first_name', 191)->nullable();
+    $t->string('middle_name', 191)->nullable();
+    $t->string('last_name', 191)->nullable();
+    $t->string('primary_email', 50)->nullable();
+    $t->string('primary_phone', 18)->nullable();
+    $t->date('birth_date')->nullable();
+    $t->unsignedSmallInteger('birth_year')->nullable();
+    $t->unsignedTinyInteger('age')->nullable();
+    $t->enum('age_by', ['birth_date', 'birth_year', 'age'])->nullable();
+    $t->enum('gender', ['male', 'female', 'other'])->nullable();
+    $t->enum('marital_status', ['single', 'married', 'divorced', 'widowed'])->nullable();
+    $t->enum('source', ['TTP', 'Assessment', 'Measurement_Camp', 'Referral', 'Paper_Insert', 'Circular_of_Influence', 'Social_Media', 'Advertisement', 'Walk_In', 'Other'])->nullable();
+    $t->string('source_details', 191)->nullable();
+    $t->string('occupation', 191)->nullable();
+    $t->string('mother_tongue', 25)->nullable();
+    $t->string('notes')->nullable();
+    $t->date('last_follow_up_date')->nullable();
+    $t->date('next_follow_up_date')->nullable();
+    $t->string('converted_from_prospect_uuid', 36)->nullable();
+    $t->timestamp('converted_at')->nullable();
     
-    $table->enum('marketing_level', ['Guest', 'Preferred_Customer', 'Associate', 'Senior_Consultant', 'Success_Builder', 'Supervisor', 'Active_Supervisor', 'World_Team', 'Active_World_Team', 'GET', 'GET 2500','MIL', 'MIL 7500', 'PRESIDENT TEAM', 'Executive Presidents Team', 'Senior Executive Presidents Team', 'International Executive Presidents Team', 'Chief Executive Presidents Team', 'Chairmans Club', 'Founder Circle' ])->default('Guest');
-    $table->unsignedTinyInteger('diamonds')->nullable();
-    $table->unsignedTinyInteger('stones')->nullable();
-    $table->unsignedTinyInteger('royalty_level')->nullable();
-    $table->unsignedTinyInteger('discount_level')->default(0);
-    $table->unsignedTinyInteger('years_active')->default(0);
-    $table->unsignedTinyInteger('mark_hughes_award')->default(0);
+    $t->enum('marketing_level', ['Guest', 'Preferred_Customer', 'Associate', 'Senior_Consultant', 'Success_Builder', 'Supervisor', 'Active_Supervisor', 'World_Team', 'Active_World_Team', 'GET', 'GET 2500','MIL', 'MIL 7500', 'PRESIDENT TEAM', 'Executive Presidents Team', 'Senior Executive Presidents Team', 'International Executive Presidents Team', 'Chief Executive Presidents Team', 'Chairmans Club', 'Founder Circle' ])->default('Guest');
+    $t->unsignedTinyInteger('diamonds')->nullable();
+    $t->unsignedTinyInteger('stones')->nullable();
+    $t->unsignedTinyInteger('royalty_level')->nullable();
+    $t->unsignedTinyInteger('discount_level')->default(0);
+    $t->unsignedTinyInteger('years_active')->default(0);
+    $t->unsignedTinyInteger('mark_hughes_award')->default(0);
 
-    $table->boolean('is_active')->default(true);
-    $table->foreignUuid('coach_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('referred_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('supervisor_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('world_team_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('get_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('mil_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('president_team_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->boolean('is_active')->default(true);
+    $t->foreignUuid('coach_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('referred_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('supervisor_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('world_team_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('get_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('mil_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('president_team_id')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
     
-    $table->timestamps();
-    $table->softDeletes();
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['user_uuid', 'is_active']);
-    $table->index(['coach_id', 'is_active']);
-    $table->index(['created_by', 'is_active']);
-    $table->index(['next_follow_up_date']);
-    $table->index(['converted_from_prospect_uuid']);
+    $t->index(['user_uuid', 'is_active']);
+    $t->index(['coach_id', 'is_active']);
+    $t->index(['created_by', 'is_active']);
+    $t->index(['next_follow_up_date']);
+    $t->index(['converted_from_prospect_uuid']);
 });
 ```
 
 ### User Groups
 
 ```php
-Schema::create('groups', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('groupable_type', 191)->nullable(); // User or Club or Prospect
-    $table->string('groupable_id', 36)->nullable(); // User or Club or Prospect ID
-    $table->string('name')->notNull();
-    $table->string('description')->nullable();
-    $table->enum('type', ['marketing_level', 'coach_hierarchy', 'club', 'non-supervisor', 'batch', 'demographic', 'program_batch', 'custom'])->notNull();
-    $table->string('custom_type')->nullable();
-    $table->string('group_code')->nullable()->unique();
-    $table->json('criteria')->nullable();
-    $table->boolean('auto_assign')->default(false);
-    $table->boolean('is_active')->default(true);
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('groups', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('groupable_type', 191)->nullable(); // User or Club or Prospect
+    $t->string('groupable_id', 36)->nullable(); // User or Club or Prospect ID
+    $t->string('name')->notNull();
+    $t->string('description')->nullable();
+    $t->enum('type', ['marketing_level', 'coach_hierarchy', 'club', 'non-supervisor', 'batch', 'demographic', 'program_batch', 'custom'])->notNull();
+    $t->string('custom_type')->nullable();
+    $t->string('group_code')->nullable()->unique();
+    $t->json('criteria')->nullable();
+    $t->boolean('auto_assign')->default(false);
+    $t->boolean('is_active')->default(true);
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['groupable_type', 'groupable_id']);
-    $table->index(['type', 'is_active']);
-    $table->index(['created_by', 'is_active']);
+    $t->index(['groupable_type', 'groupable_id']);
+    $t->index(['type', 'is_active']);
+    $t->index(['created_by', 'is_active']);
 });
 ```
 
@@ -591,11 +631,11 @@ Schema::create('groups', function (Blueprint $table) {
 
 - This is a fix value table, feel with seeding only. And can be keep long cached.
 ```php
-Schema::create('marketing_levels', function (Blueprint $table) {
-    $table->id();
-    $table->integer('level')->unique();
-    $table->string('name')->index();
-    $table->timestamps();
+Schema::create('marketing_levels', function (Blueprint $t) {
+    $t->id();
+    $t->integer('level')->unique();
+    $t->string('name')->index();
+    $t->timestamps();
 });
 ```
 
@@ -605,26 +645,26 @@ Schema::create('marketing_levels', function (Blueprint $table) {
 - All contacts with country code, email format, phone format, etc. should be validated during input. if not available in laravel inbuilt, then use its ecosystem or third party package.
 
 ```php
-Schema::create('contacts', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('contactable_type', 191)->nullable(); // User or Club
-    $table->string('contactable_id', 36)->nullable(); // User or Club ID
-    $table->enum('type', ['Mobile', 'TelePhone', 'WhatsApp', 'Email', 'Facebook', 'Instagram', 'YouTube', 'Telegram', 'Other', 'WhatsApp Business', 'WhatsApp Personal', 'Custom'])->default('Mobile');
-    $table->string('custom_type')->nullable();
-    $table->string('value')->notNull();
-    $table->boolean('is_primary')->default(false);
-    $table->boolean('is_verified')->default(false);
-    $table->string('tags')->nullable();
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('contacts', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('contactable_type', 191)->nullable(); // User or Club
+    $t->string('contactable_id', 36)->nullable(); // User or Club ID
+    $t->enum('type', ['Mobile', 'TelePhone', 'WhatsApp', 'Email', 'Facebook', 'Instagram', 'YouTube', 'Telegram', 'Other', 'WhatsApp Business', 'WhatsApp Personal', 'Custom'])->default('Mobile');
+    $t->string('custom_type')->nullable();
+    $t->string('value')->notNull();
+    $t->boolean('is_primary')->default(false);
+    $t->boolean('is_verified')->default(false);
+    $t->string('tags')->nullable();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['contactable_type', 'contactable_id']);
-    $table->index(['type', 'is_primary']);
-    $table->index(['is_verified']);
+    $t->index(['contactable_type', 'contactable_id']);
+    $t->index(['type', 'is_primary']);
+    $t->index(['is_verified']);
 });
 ```
 
@@ -635,36 +675,36 @@ Schema::create('contacts', function (Blueprint $table) {
 - Also can we get city, taluka, district, state, country, pincode from google map link without any cost? if yes, then we can use it.
 
 ```php  
-Schema::create('addresses', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('addressable_type', 191)->nullable(); // User or Club
-    $table->string('addressable_id', 36)->nullable(); // User or Club ID
-    $table->enum('type', ['home', 'office', 'club', 'temporary', 'other', 'custom'])->default('home');
-    $table->string('address_name')->nullable();
-    $table->string('address_line_1')->notNull();
-    $table->string('address_line_2')->nullable();
-    $table->string('city')->notNull();
-    $table->string('taluka')->nullable();
-    $table->string('district')->notNull();
-    $table->string('state')->notNull();
-    $table->string('country')->notNull()->default('India');
-    $table->string('pincode')->notNull();
-    $table->string('google_map_link')->nullable();
-    $table->decimal('latitude', 11, 8)->nullable();
-    $table->decimal('longitude', 11, 8)->nullable();
-    $table->boolean('is_primary')->default(false);
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('addresses', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('addressable_type', 191)->nullable(); // User or Club
+    $t->string('addressable_id', 36)->nullable(); // User or Club ID
+    $t->enum('type', ['home', 'office', 'club', 'temporary', 'other', 'custom'])->default('home');
+    $t->string('address_name')->nullable();
+    $t->string('address_line_1')->notNull();
+    $t->string('address_line_2')->nullable();
+    $t->string('city')->notNull();
+    $t->string('taluka')->nullable();
+    $t->string('district')->notNull();
+    $t->string('state')->notNull();
+    $t->string('country')->notNull()->default('India');
+    $t->string('pincode')->notNull();
+    $t->string('google_map_link')->nullable();
+    $t->decimal('latitude', 11, 8)->nullable();
+    $t->decimal('longitude', 11, 8)->nullable();
+    $t->boolean('is_primary')->default(false);
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['addressable_type', 'addressable_id']);
-    $table->index(['type', 'is_primary']);
-    $table->index(['city', 'state']);
-    $table->index(['pincode']);
-    $table->index(['latitude', 'longitude']);
+    $t->index(['addressable_type', 'addressable_id']);
+    $t->index(['type', 'is_primary']);
+    $t->index(['city', 'state']);
+    $t->index(['pincode']);
+    $t->index(['latitude', 'longitude']);
 });
 ```
 
@@ -676,128 +716,128 @@ Schema::create('addresses', function (Blueprint $table) {
 - frontend we can use some library to identify the photo type and suggest it accordingly.
 
 ```php 
-Schema::create('photos', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('photoable_type', 191)->nullable(); // User or Club or Prospect
-    $table->string('photoable_id', 36)->nullable(); // User or Club or Prospect ID
-    $table->enum('type', ['Profile', 'Front', 'Back', 'Left', 'Right', 'Full_body', 'Measurement', 'Shake', 'Afresh', 'Skin_Booster', 'H24_Hydrate', 'H24_Rebuild', 'Sleep_Enhancer', 'Niteworks', 'Beta_Heart', 'Tablet',  'Meal', 'Snacks', 'Activity_Proof', 'Custom'])->notNull();
-    $table->string('custom_type')->nullable();
-    $table->string('file_path', 500)->notNull();
-    $table->string('file_name', 255)->notNull();
-    $table->integer('file_size')->notNull();
-    $table->string('mime_type', 100)->notNull();
-    $table->string('caption')->nullable();
-    $table->timestamp('taken_at')->nullable();
-    $table->decimal('latitude', 10, 8)->nullable();
-    $table->decimal('longitude', 11, 8)->nullable();
-    $table->boolean('is_primary')->default(false);
-    $table->string('tags')->nullable();
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('photos', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('photoable_type', 191)->nullable(); // User or Club or Prospect
+    $t->string('photoable_id', 36)->nullable(); // User or Club or Prospect ID
+    $t->enum('type', ['Profile', 'Front', 'Back', 'Left', 'Right', 'Full_body', 'Measurement', 'Shake', 'Afresh', 'Skin_Booster', 'H24_Hydrate', 'H24_Rebuild', 'Sleep_Enhancer', 'Niteworks', 'Beta_Heart', 'Tablet',  'Meal', 'Snacks', 'Activity_Proof', 'Custom'])->notNull();
+    $t->string('custom_type')->nullable();
+    $t->string('file_path', 500)->notNull();
+    $t->string('file_name', 255)->notNull();
+    $t->integer('file_size')->notNull();
+    $t->string('mime_type', 100)->notNull();
+    $t->string('caption')->nullable();
+    $t->timestamp('taken_at')->nullable();
+    $t->decimal('latitude', 10, 8)->nullable();
+    $t->decimal('longitude', 11, 8)->nullable();
+    $t->boolean('is_primary')->default(false);
+    $t->string('tags')->nullable();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['photoable_type', 'photoable_id']);
-    $table->index(['type', 'is_primary']);
-    $table->index(['file_path']);
-    $table->index(['taken_at']);
-    $table->index(['latitude', 'longitude']);
+    $t->index(['photoable_type', 'photoable_id']);
+    $t->index(['type', 'is_primary']);
+    $t->index(['file_path']);
+    $t->index(['taken_at']);
+    $t->index(['latitude', 'longitude']);
 });
 ```
 
 ### Health
 
 ```php
-Schema::create('health_data', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('health_dataable_type', 191)->nullable(); // User or Prospect
-    $table->string('health_dataable_id', 36)->nullable(); // User or Prospect ID
-    $table->string('challenges')->nullable();
-    $table->string('goals')->nullable();
-    $table->string('medical_history')->nullable();
-    $table->string('current_medications')->nullable();
-    $table->string('allergies')->nullable();
-    $table->string('dietary_restrictions')->nullable();
-    $table->enum('fitness_level', ['beginner', 'intermediate', 'advanced'])->nullable();
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('health_data', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('health_dataable_type', 191)->nullable(); // User or Prospect
+    $t->string('health_dataable_id', 36)->nullable(); // User or Prospect ID
+    $t->string('challenges')->nullable();
+    $t->string('goals')->nullable();
+    $t->string('medical_history')->nullable();
+    $t->string('current_medications')->nullable();
+    $t->string('allergies')->nullable();
+    $t->string('dietary_restrictions')->nullable();
+    $t->enum('fitness_level', ['beginner', 'intermediate', 'advanced'])->nullable();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
 });
 ```
 
 ```php
-Schema::create('measurements', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('measurementable_type', 191)->nullable(); // User or Prospect
-    $table->string('measurementable_id', 36)->nullable(); // User or Prospect ID
-    $table->enum('condition', ['Empty Stomach', 'After Breakfast', 'After Lunch', 'After Dinner', '2 Hours After Meal', '1 Hour after Breakfast'])->nullable();
-    $table->unsignedTinyInteger('age')->nullable();
-    $table->decimal('height', 5, 2)->nullable();
-    $table->decimal('weight', 5, 2)->nullable();
-    $table->decimal('body_fat', 5, 2)->nullable();
-    $table->decimal('bmi', 5, 2)->nullable();
-    $table->decimal('visceral_fat', 5, 2)->nullable();
-    $table->unsignedSmallInteger('bmr_resting')->nullable();
-    $table->unsignedTinyInteger('body_age')->nullable();
-    $table->decimal('trunk_fat', 5, 2)->nullable();
-    $table->decimal('muscle_mass', 5, 2)->nullable();
-    $table->decimal('belly_inches_top', 5, 2)->nullable();
-    $table->decimal('belly_inches_bottom', 5, 2)->nullable();
-    $table->string('notes')->nullable();
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('measurements', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('measurementable_type', 191)->nullable(); // User or Prospect
+    $t->string('measurementable_id', 36)->nullable(); // User or Prospect ID
+    $t->enum('condition', ['Empty Stomach', 'After Breakfast', 'After Lunch', 'After Dinner', '2 Hours After Meal', '1 Hour after Breakfast'])->nullable();
+    $t->unsignedTinyInteger('age')->nullable();
+    $t->decimal('height', 5, 2)->nullable();
+    $t->decimal('weight', 5, 2)->nullable();
+    $t->decimal('body_fat', 5, 2)->nullable();
+    $t->decimal('bmi', 5, 2)->nullable();
+    $t->decimal('visceral_fat', 5, 2)->nullable();
+    $t->unsignedSmallInteger('bmr_resting')->nullable();
+    $t->unsignedTinyInteger('body_age')->nullable();
+    $t->decimal('trunk_fat', 5, 2)->nullable();
+    $t->decimal('muscle_mass', 5, 2)->nullable();
+    $t->decimal('belly_inches_top', 5, 2)->nullable();
+    $t->decimal('belly_inches_bottom', 5, 2)->nullable();
+    $t->string('notes')->nullable();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['measurementable_type', 'measurementable_id']);
-    $table->index(['created_by']);
+    $t->index(['measurementable_type', 'measurementable_id']);
+    $t->index(['created_by']);
 });
 ```
 
 
 ```php
-Schema::create('daily_trackers', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade');
-    $table->date('date')->index();
+Schema::create('daily_trackers', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade');
+    $t->date('date')->index();
     // Fixed daily data fields
-    $table->integer('water_intake')->default(0); // in ml
-    $table->decimal('sleep_hours', 3, 1)->default(0); // in hours
-    $table->boolean('exercise_done')->default(false);
-    $table->integer('exercise_duration')->default(0); // in minutes
-    $table->integer('mood_rating')->default(0); // 1-10 scale
-    $table->integer('mindset_rating')->default(0); // 1-10 scale
-    $table->integer('energy_level')->default(0); // 1-10 scale
-    $table->integer('streak_count')->default(0);
-    $table->boolean('is_validated')->default(false);
+    $t->integer('water_intake')->default(0); // in ml
+    $t->decimal('sleep_hours', 3, 1)->default(0); // in hours
+    $t->boolean('exercise_done')->default(false);
+    $t->integer('exercise_duration')->default(0); // in minutes
+    $t->integer('mood_rating')->default(0); // 1-10 scale
+    $t->integer('mindset_rating')->default(0); // 1-10 scale
+    $t->integer('energy_level')->default(0); // 1-10 scale
+    $t->integer('streak_count')->default(0);
+    $t->boolean('is_validated')->default(false);
     // Validation and notes
-    $table->string('notes')->nullable();
-    $table->foreignUuid('validated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade')->index();
-    $table->timestamp('validated_at')->nullable();
+    $t->string('notes')->nullable();
+    $t->foreignUuid('validated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade')->index();
+    $t->timestamp('validated_at')->nullable();
     // Audit fields
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade')->index();
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade')->index();
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     // Performance indexes
-    $table->unique(['user_uuid', 'date']);
+    $t->unique(['user_uuid', 'date']);
 });
 ```
 
 ```php
-Schema::create('daily_tracker_intakes', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->foreignUuid('daily_tracker_uuid')->constrained('daily_trackers', 'uuid')->onDelete('cascade')->index();
+Schema::create('daily_tracker_intakes', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('daily_tracker_uuid')->constrained('daily_trackers', 'uuid')->onDelete('cascade')->index();
 
             // Supplement intake details
-    $table->enum('supplement_type', [
+    $t->enum('supplement_type', [
         'Shake',
         'Afresh',
         'Detox',
@@ -812,73 +852,73 @@ Schema::create('daily_tracker_intakes', function (Blueprint $table) {
         'Herbalifeline',
         'Other'
     ])->index();
-    $table->string('supplement_name')->nullable();
+    $t->string('supplement_name')->nullable();
 
-    $table->timestamp('taken_at')->index();
-    $table->decimal('quantity', 10, 2)->default(1); // For servings devided in multiple persons/parts
-    $table->string('notes')->nullable(); // Optional notes for this specific intake
+    $t->timestamp('taken_at')->index();
+    $t->decimal('quantity', 10, 2)->default(1); // For servings devided in multiple persons/parts
+    $t->string('notes')->nullable(); // Optional notes for this specific intake
 
     // Audit fields
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade')->index();
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade')->index();
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
 
     // Composite index for efficient queries
-    $table->index(['daily_tracker_uuid', 'supplement_type']);
-    $table->index(['daily_tracker_uuid', 'taken_at']);
+    $t->index(['daily_tracker_uuid', 'supplement_type']);
+    $t->index(['daily_tracker_uuid', 'taken_at']);
 });
 ```
 
 ## Activities
 
 ```php
-Schema::create('activities', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('name')->notNull();
-    $table->string('description')->nullable();
-    $table->dateTime('schedule_start_date_time')->nullable();
-    $table->dateTime('schedule_end_date_time')->nullable();
-    $table->string('location')->nullable();
-    $table->string('location_remark')->nullable();
-    $table->unsignedSmallInteger('invites')->nullable();
-    $table->unsignedSmallInteger('accepted')->nullable();
-    $table->enum('type', ['Group', 'Individual'])->default('Individual');
-    $table->enum('activity_type', ['TTP', 'Flyer', 'Survey', 'Health Check Camp', 'Road Show', 'Afresh Party', 'MIW', 'Business Opportunity', 'Social Media Ads', 'Bulk Messaging', 'Bulk Emailing', 'Poster'])->default('TTP');
-    $table->enum('activity_type_remark', ['major', 'minor', 'other'])->default('major');
-    $table->string('activity_type_remark_other')->nullable();
-    $table->enum('activity_status', ['Scheduled', 'Completed', 'Cancelled', 'Pending'])->default('Pending');
-    $table->string('activity_status_remark')->nullable();
-    $table->enum('prospect_distribution_method', ['only_COI_provider', 'equally_distributed', 'individual', 'other'])->default('only_COI_provider');
-    $table->string('other_distribution_method')->nullable();
-    $table->json('prospects')->nullable();
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade')->index();
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('activities', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('name')->notNull();
+    $t->string('description')->nullable();
+    $t->dateTime('schedule_start_date_time')->nullable();
+    $t->dateTime('schedule_end_date_time')->nullable();
+    $t->string('location')->nullable();
+    $t->string('location_remark')->nullable();
+    $t->unsignedSmallInteger('invites')->nullable();
+    $t->unsignedSmallInteger('accepted')->nullable();
+    $t->enum('type', ['Group', 'Individual'])->default('Individual');
+    $t->enum('activity_type', ['TTP', 'Flyer', 'Survey', 'Health Check Camp', 'Road Show', 'Afresh Party', 'MIW', 'Business Opportunity', 'Social Media Ads', 'Bulk Messaging', 'Bulk Emailing', 'Poster'])->default('TTP');
+    $t->enum('activity_type_remark', ['major', 'minor', 'other'])->default('major');
+    $t->string('activity_type_remark_other')->nullable();
+    $t->enum('activity_status', ['Scheduled', 'Completed', 'Cancelled', 'Pending'])->default('Pending');
+    $t->string('activity_status_remark')->nullable();
+    $t->enum('prospect_distribution_method', ['only_COI_provider', 'equally_distributed', 'individual', 'other'])->default('only_COI_provider');
+    $t->string('other_distribution_method')->nullable();
+    $t->json('prospects')->nullable();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade')->index();
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
 });
 ```
 
 ```php
-Schema::create('activity_participants', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->foreignUuid('activity_uuid')->constrained('activities', 'uuid')->onDelete('cascade')->index();
-    $table->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade')->index();
-    $table->enum('status', ['Invited', 'Accepted', 'Rejected', 'Cancelled'])->default('Invited');
-    $table->string('status_remark')->nullable();
-    $table->enum('role', ['Creator', 'Participant', 'Scanning', 'Counseling', 'Invitee', 'Other', 'Learner'])->default('Participant');
-    $table->string('role_remark')->nullable();
-    $table->string('notes')->nullable();
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('activity_participants', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('activity_uuid')->constrained('activities', 'uuid')->onDelete('cascade')->index();
+    $t->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade')->index();
+    $t->enum('status', ['Invited', 'Accepted', 'Rejected', 'Cancelled'])->default('Invited');
+    $t->string('status_remark')->nullable();
+    $t->enum('role', ['Creator', 'Participant', 'Scanning', 'Counseling', 'Invitee', 'Other', 'Learner'])->default('Participant');
+    $t->string('role_remark')->nullable();
+    $t->string('notes')->nullable();
+    $t->timestamps();
+    $t->softDeletes();
 });
 ```
 
 ```php
-Schema::table('prospects', function (Blueprint $table) {
-    $table->foreignUuid('activity_uuid')->nullable()->constrained('activities', 'uuid')->onDelete('cascade')->index();
+Schema::table('prospects', function (Blueprint $t) {
+    $t->foreignUuid('activity_uuid')->nullable()->constrained('activities', 'uuid')->onDelete('cascade')->index();
 });
 ```
 - Prospects Array (with assignment)
@@ -886,11 +926,11 @@ Schema::table('prospects', function (Blueprint $table) {
 
 ```php
 // add  consent,  theme, timezone, language to user profile
-Schema::table('users', function (Blueprint $table) {
-    $table->boolean('consent')->default(false);
-    $table->string('theme')->default('system');
-    $table->string('timezone')->default('Asia/Kolkata');
-    $table->string('language')->default('en');
+Schema::table('users', function (Blueprint $t) {
+    $t->boolean('consent')->default(false);
+    $t->string('theme')->default('system');
+    $t->string('timezone')->default('Asia/Kolkata');
+    $t->string('language')->default('en');
 });
 ```
 
@@ -914,183 +954,183 @@ The stock management system handles:
 
 ```php
 // Products table (unchanged - master product catalog)
-Schema::create('products', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('sku')->unique();
-    $table->string('name')->index();
-    $table->decimal('volume_points', 8, 2);
-    $table->decimal('earn_base', 8, 2);
-    $table->decimal('base_price', 10, 2);
-    $table->decimal('tax_percentage', 5, 2);
-    $table->decimal('mrp', 10, 2);
-    $table->decimal('discount_15_price', 10, 2);
-    $table->decimal('discount_25_price', 10, 2);
-    $table->decimal('discount_35_price', 10, 2);
-    $table->decimal('discount_42_price', 10, 2);
-    $table->decimal('discount_50_price', 10, 2);
-    $table->string('unit', 50);
-    $table->decimal('vp_per_unit', 8, 2);
-    $table->date('price_release_date');
-    $table->boolean('is_active')->default(true);
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('products', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('sku')->unique();
+    $t->string('name')->index();
+    $t->decimal('volume_points', 8, 2);
+    $t->decimal('earn_base', 8, 2);
+    $t->decimal('base_price', 10, 2);
+    $t->decimal('tax_percentage', 5, 2);
+    $t->decimal('mrp', 10, 2);
+    $t->decimal('discount_15_price', 10, 2);
+    $t->decimal('discount_25_price', 10, 2);
+    $t->decimal('discount_35_price', 10, 2);
+    $t->decimal('discount_42_price', 10, 2);
+    $t->decimal('discount_50_price', 10, 2);
+    $t->string('unit', 50);
+    $t->decimal('vp_per_unit', 8, 2);
+    $t->date('price_release_date');
+    $t->boolean('is_active')->default(true);
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
 });
 
 // Product price history (unchanged)
-Schema::create('product_histories', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->foreignUuid('product_id')->constrained('products', 'uuid')->onDelete('cascade');
-    $table->string('sku');
-    $table->string('name');
-    $table->decimal('volume_points', 8, 2);
-    $table->decimal('earn_base', 8, 2);
-    $table->decimal('base_price', 10, 2);
-    $table->decimal('tax_percentage', 5, 2);
-    $table->decimal('mrp', 10, 2);
-    $table->decimal('discount_15_price', 10, 2);
-    $table->decimal('discount_25_price', 10, 2);
-    $table->decimal('discount_35_price', 10, 2);
-    $table->decimal('discount_42_price', 10, 2);
-    $table->decimal('discount_50_price', 10, 2);
-    $table->string('unit', 50);
-    $table->decimal('vp_per_unit', 8, 2);
-    $table->date('price_release_date');
-    $table->boolean('is_active')->default(true);
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('product_histories', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('product_id')->constrained('products', 'uuid')->onDelete('cascade');
+    $t->string('sku');
+    $t->string('name');
+    $t->decimal('volume_points', 8, 2);
+    $t->decimal('earn_base', 8, 2);
+    $t->decimal('base_price', 10, 2);
+    $t->decimal('tax_percentage', 5, 2);
+    $t->decimal('mrp', 10, 2);
+    $t->decimal('discount_15_price', 10, 2);
+    $t->decimal('discount_25_price', 10, 2);
+    $t->decimal('discount_35_price', 10, 2);
+    $t->decimal('discount_42_price', 10, 2);
+    $t->decimal('discount_50_price', 10, 2);
+    $t->string('unit', 50);
+    $t->decimal('vp_per_unit', 8, 2);
+    $t->date('price_release_date');
+    $t->boolean('is_active')->default(true);
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
 });
 
 // Stock locations (unchanged)
-Schema::create('stock_locations', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('name');
-    $table->enum('type', ['club', 'club_physical', 'club_virtual', 'coach', 'member', 'warehouse', 'Other']);
-    $table->foreignUuid('owner_uuid')->constrained('users', 'uuid')->onDelete('cascade')->index();
-    $table->text('address')->nullable();
-    $table->boolean('is_active')->default(true);
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('stock_locations', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('name');
+    $t->enum('type', ['club', 'club_physical', 'club_virtual', 'coach', 'member', 'warehouse', 'Other']);
+    $t->foreignUuid('owner_uuid')->constrained('users', 'uuid')->onDelete('cascade')->index();
+    $t->text('address')->nullable();
+    $t->boolean('is_active')->default(true);
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
 });
 
 // NEW: Company invoices (for stock receipt tracking)
-Schema::create('company_invoices', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('invoice_number')->unique();
-    $table->date('invoice_date');
-    $table->date('received_date');
-    $table->decimal('total_amount', 12, 2);
-    $table->decimal('total_tax', 10, 2)->default(0);
-    $table->decimal('total_volume_points', 10, 2)->default(0);
-    $table->enum('status', ['pending', 'received', 'verified', 'cancelled'])->default('pending');
-    $table->text('notes')->nullable();
-    $table->foreignUuid('received_by')->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('verified_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamp('verified_at')->nullable();
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('company_invoices', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('invoice_number')->unique();
+    $t->date('invoice_date');
+    $t->date('received_date');
+    $t->decimal('total_amount', 12, 2);
+    $t->decimal('total_tax', 10, 2)->default(0);
+    $t->decimal('total_volume_points', 10, 2)->default(0);
+    $t->enum('status', ['pending', 'received', 'verified', 'cancelled'])->default('pending');
+    $t->text('notes')->nullable();
+    $t->foreignUuid('received_by')->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('verified_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamp('verified_at')->nullable();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['invoice_date']);
-    $table->index(['received_date']);
-    $table->index(['status']);
-    $table->index(['received_by']);
+    $t->index(['invoice_date']);
+    $t->index(['received_date']);
+    $t->index(['status']);
+    $t->index(['received_by']);
 });
 
 // NEW: Invoice items (individual products in invoice)
-Schema::create('invoice_items', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->foreignUuid('invoice_uuid')->constrained('company_invoices', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('product_uuid')->constrained('products', 'uuid')->onDelete('cascade');
-    $table->decimal('quantity', 10, 2);
-    $table->decimal('unit_price', 10, 2);
-    $table->decimal('total_price', 12, 2);
-    $table->decimal('tax_amount', 10, 2)->default(0);
-    $table->decimal('volume_points', 8, 2)->default(0);
-    $table->string('batch_number')->nullable(); // Company batch number
-    $table->date('expiry_date')->nullable();
-    $table->text('notes')->nullable();
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('invoice_items', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('invoice_uuid')->constrained('company_invoices', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('product_uuid')->constrained('products', 'uuid')->onDelete('cascade');
+    $t->decimal('quantity', 10, 2);
+    $t->decimal('unit_price', 10, 2);
+    $t->decimal('total_price', 12, 2);
+    $t->decimal('tax_amount', 10, 2)->default(0);
+    $t->decimal('volume_points', 8, 2)->default(0);
+    $t->string('batch_number')->nullable(); // Company batch number
+    $t->date('expiry_date')->nullable();
+    $t->text('notes')->nullable();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['invoice_uuid']);
-    $table->index(['product_uuid']);
-    $table->index(['batch_number']);
-    $table->index(['expiry_date']);
+    $t->index(['invoice_uuid']);
+    $t->index(['product_uuid']);
+    $t->index(['batch_number']);
+    $t->index(['expiry_date']);
 });
 
 // REVISED: Stocks (main stock table for each SKU at each location)
-Schema::create('stocks', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->foreignUuid('product_uuid')->constrained('products', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('location_uuid')->constrained('stock_locations', 'uuid')->onDelete('cascade');
-    $table->decimal('total_quantity', 10, 2)->default(0); // Total stock available
-    $table->decimal('reserved_quantity', 10, 2)->default(0); // Reserved for **orders**
-    $table->decimal('average_cost', 10, 2)->default(0); // Weighted average cost
-    $table->decimal('total_value', 12, 2)->default(0); // Total stock value
-    $table->date('last_updated')->nullable();
-    $table->text('notes')->nullable();
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('stocks', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('product_uuid')->constrained('products', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('location_uuid')->constrained('stock_locations', 'uuid')->onDelete('cascade');
+    $t->decimal('total_quantity', 10, 2)->default(0); // Total stock available
+    $t->decimal('reserved_quantity', 10, 2)->default(0); // Reserved for **orders**
+    $t->decimal('average_cost', 10, 2)->default(0); // Weighted average cost
+    $t->decimal('total_value', 12, 2)->default(0); // Total stock value
+    $t->date('last_updated')->nullable();
+    $t->text('notes')->nullable();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->unique(['product_uuid', 'location_uuid']); // One stock record per product per location
-    $table->index(['product_uuid']);
-    $table->index(['location_uuid']);
-    $table->index(['available_quantity']);
-    $table->index(['last_updated']);
+    $t->unique(['product_uuid', 'location_uuid']); // One stock record per product per location
+    $t->index(['product_uuid']);
+    $t->index(['location_uuid']);
+    $t->index(['available_quantity']);
+    $t->index(['last_updated']);
 });
 
 // NEW: Stock items (detailed tracking of individual stock receipts)
-Schema::create('stock_items', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->foreignUuid('stock_uuid')->constrained('stocks', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('invoice_item_uuid')->constrained('invoice_items', 'uuid')->onDelete('cascade');
-    $table->string('batch_number')->nullable(); // Company batch number
-    $table->decimal('purchase_price', 10, 2); // Actual purchase price from invoice
-    $table->decimal('initial_quantity', 10, 2); // Initial quantity received
-    $table->decimal('remaining_quantity', 10, 2); // Current remaining quantity
-    $table->date('purchase_date'); // Date from invoice
-    $table->date('expiry_date')->nullable();
-    $table->enum('status', ['active', 'expired', 'depleted'])->default('active');
-    $table->text('notes')->nullable();
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('stock_items', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('stock_uuid')->constrained('stocks', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('invoice_item_uuid')->constrained('invoice_items', 'uuid')->onDelete('cascade');
+    $t->string('batch_number')->nullable(); // Company batch number
+    $t->decimal('purchase_price', 10, 2); // Actual purchase price from invoice
+    $t->decimal('initial_quantity', 10, 2); // Initial quantity received
+    $t->decimal('remaining_quantity', 10, 2); // Current remaining quantity
+    $t->date('purchase_date'); // Date from invoice
+    $t->date('expiry_date')->nullable();
+    $t->enum('status', ['active', 'expired', 'depleted'])->default('active');
+    $t->text('notes')->nullable();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['stock_uuid']);
-    $table->index(['batch_number']);
-    $table->index(['purchase_date']);
-    $table->index(['expiry_date']);
-    $table->index(['status']);
-    $table->index(['remaining_quantity']);
+    $t->index(['stock_uuid']);
+    $t->index(['batch_number']);
+    $t->index(['purchase_date']);
+    $t->index(['expiry_date']);
+    $t->index(['status']);
+    $t->index(['remaining_quantity']);
 });
 
 // REVISED: Stock movements (detailed tracking of all stock movements)
-Schema::create('stock_movements', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->enum('movement_type', [
+Schema::create('stock_movements', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->enum('movement_type', [
         'receipt',           // Stock received from company
         'transfer',          // Transfer between locations
         'sale_guest',        // Sale to new guest
@@ -1103,94 +1143,94 @@ Schema::create('stock_movements', function (Blueprint $table) {
         'reservation',       // Reserve for order
         'unreservation'      // Cancel reservation
     ]);
-    $table->foreignUuid('stock_uuid')->constrained('stocks', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('stock_item_uuid')->nullable()->constrained('stock_items', 'uuid')->onDelete('cascade'); // For FIFO tracking
-    $table->foreignUuid('from_location_uuid')->nullable()->constrained('stock_locations', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('to_location_uuid')->nullable()->constrained('stock_locations', 'uuid')->onDelete('cascade');
-    $table->decimal('quantity', 10, 2);
-    $table->decimal('unit_price', 10, 2); // Price at time of movement
-    $table->decimal('total_amount', 12, 2);
-    $table->decimal('profit_loss', 12, 2)->nullable(); // For sales: selling_price - purchase_price
+    $t->foreignUuid('stock_uuid')->constrained('stocks', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('stock_item_uuid')->nullable()->constrained('stock_items', 'uuid')->onDelete('cascade'); // For FIFO tracking
+    $t->foreignUuid('from_location_uuid')->nullable()->constrained('stock_locations', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('to_location_uuid')->nullable()->constrained('stock_locations', 'uuid')->onDelete('cascade');
+    $t->decimal('quantity', 10, 2);
+    $t->decimal('unit_price', 10, 2); // Price at time of movement
+    $t->decimal('total_amount', 12, 2);
+    $t->decimal('profit_loss', 12, 2)->nullable(); // For sales: selling_price - purchase_price
     
     // Reference tracking
-    $table->string('reference_type', 100)->nullable(); // 'order', 'club_consumption', 'shake_counter', 'invoice'
-    $table->string('reference_uuid', 36)->nullable();
+    $t->string('reference_type', 100)->nullable(); // 'order', 'club_consumption', 'shake_counter', 'invoice'
+    $t->string('reference_uuid', 36)->nullable();
     
     // Customer/User tracking for sales
-    $table->foreignUuid('customer_uuid')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('club_uuid')->nullable()->constrained('clubs', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('customer_uuid')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('club_uuid')->nullable()->constrained('clubs', 'uuid')->onDelete('cascade');
     
     // Approval workflow
-    $table->foreignUuid('performed_by')->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('approved_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamp('approved_at')->nullable();
-    $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending');
+    $t->foreignUuid('performed_by')->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('approved_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamp('approved_at')->nullable();
+    $t->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending');
     
-    $table->text('notes')->nullable();
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+    $t->text('notes')->nullable();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['movement_type']);
-    $table->index(['stock_uuid']);
-    $table->index(['stock_item_uuid']);
-    $table->index(['from_location_uuid']);
-    $table->index(['to_location_uuid']);
-    $table->index(['customer_uuid']);
-    $table->index(['club_uuid']);
-    $table->index(['performed_by']);
-    $table->index(['status']);
-    $table->index(['reference_type', 'reference_uuid']);
+    $t->index(['movement_type']);
+    $t->index(['stock_uuid']);
+    $t->index(['stock_item_uuid']);
+    $t->index(['from_location_uuid']);
+    $t->index(['to_location_uuid']);
+    $t->index(['customer_uuid']);
+    $t->index(['club_uuid']);
+    $t->index(['performed_by']);
+    $t->index(['status']);
+    $t->index(['reference_type', 'reference_uuid']);
 });
 
 // NEW: Stock reservations (for pending orders)
-Schema::create('stock_reservations', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->foreignUuid('stock_uuid')->constrained('stocks', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('customer_uuid')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->decimal('quantity', 10, 2);
-    $table->date('reserved_until');
-    $table->enum('status', ['active', 'fulfilled', 'expired', 'cancelled'])->default('active');
-    $table->text('notes')->nullable();
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('stock_reservations', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('stock_uuid')->constrained('stocks', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('customer_uuid')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->decimal('quantity', 10, 2);
+    $t->date('reserved_until');
+    $t->enum('status', ['active', 'fulfilled', 'expired', 'cancelled'])->default('active');
+    $t->text('notes')->nullable();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['stock_uuid']);
-    $table->index(['customer_uuid']);
-    $table->index(['reserved_until']);
-    $table->index(['status']);
+    $t->index(['stock_uuid']);
+    $t->index(['customer_uuid']);
+    $t->index(['reserved_until']);
+    $t->index(['status']);
 });
 
 // NEW: Stock valuation (for profit/loss tracking)
-Schema::create('stock_valuations', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->foreignUuid('location_uuid')->constrained('stock_locations', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('product_uuid')->constrained('products', 'uuid')->onDelete('cascade');
-    $table->decimal('total_quantity', 10, 2);
-    $table->decimal('average_cost', 10, 2); // Weighted average cost
-    $table->decimal('total_value', 12, 2);
-    $table->decimal('market_value', 12, 2); // Current market value
-    $table->decimal('unrealized_profit_loss', 12, 2); // Market value - Total value
-    $table->date('valuation_date');
-    $table->text('notes')->nullable();
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('stock_valuations', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('location_uuid')->constrained('stock_locations', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('product_uuid')->constrained('products', 'uuid')->onDelete('cascade');
+    $t->decimal('total_quantity', 10, 2);
+    $t->decimal('average_cost', 10, 2); // Weighted average cost
+    $t->decimal('total_value', 12, 2);
+    $t->decimal('market_value', 12, 2); // Current market value
+    $t->decimal('unrealized_profit_loss', 12, 2); // Market value - Total value
+    $t->date('valuation_date');
+    $t->text('notes')->nullable();
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['location_uuid']);
-    $table->index(['product_uuid']);
-    $table->index(['valuation_date']);
-    $table->unique(['location_uuid', 'product_uuid', 'valuation_date']);
+    $t->index(['location_uuid']);
+    $t->index(['product_uuid']);
+    $t->index(['valuation_date']);
+    $t->unique(['location_uuid', 'product_uuid', 'valuation_date']);
 });
 ```
 
@@ -1308,101 +1348,604 @@ GET /api/stock-valuations/profit-loss-report
 ## Club Management System
 
 ```php
-Schema::create('clubs', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('name');
-    $table->string('tagline', 500)->nullable();
-    $table->enum('club_type', ['UMS', 'Centralise', '2_Time_UMS', '2_Time_Centralise']);
-    $table->enum('club_mode', ['Offline', 'Online', 'Hybrid', '2_Time_Offline', 'Hybrid_with_2_Time_Online']);
-    $table->date('start_date');
-    $table->boolean('is_active')->default(true);
-    $table->foreignUuid('owner_id')->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('clubs', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('name');
+    $t->string('tagline', 500)->nullable();
+    $t->enum('club_type', ['UMS', 'Centralise', '2_Time_UMS', '2_Time_Centralise']);
+    $t->enum('club_mode', ['Offline', 'Online', 'Hybrid', '2_Time_Offline', 'Hybrid_with_2_Time_Online']);
+    $t->date('start_date');
+    $t->boolean('is_active')->default(true);
+    $t->foreignUuid('owner_id')->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['owner_id']);
-    $table->index(['is_active']);
+    $t->index(['owner_id']);
+    $t->index(['is_active']);
 });
 
-Schema::create('club_memberships', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->foreignUuid('club_uuid')->constrained('clubs', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade');
-    $table->enum('association_type', ['Membership', 'Kit_Plus_Fee', 'Owner', 'Guest', 'Only_excercise', 'excercise_afresh']);
-    $table->decimal('membership_fee', 10, 2)->nullable();
-    $table->timestamp('joined_at')->useCurrent();
-    $table->timestamp('expires_at')->nullable();
-    $table->boolean('is_active')->default(true);
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('club_memberships', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('club_uuid')->constrained('clubs', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade');
+    $t->enum('association_type', ['Membership', 'Kit_Plus_Fee', 'Owner', 'Guest', 'Only_excercise', 'excercise_afresh']);
+    $t->decimal('membership_fee', 10, 2)->nullable();
+    $t->timestamp('joined_at')->useCurrent();
+    $t->timestamp('expires_at')->nullable();
+    $t->boolean('is_active')->default(true);
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['club_uuid']);
-    $table->index(['user_uuid']);
-    $table->index(['expires_at']);
+    $t->index(['club_uuid']);
+    $t->index(['user_uuid']);
+    $t->index(['expires_at']);
 });
 ```
 
 #### Shake Counter Implementation:
 ```php
-Schema::create('shake_combinations', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->string('name');
-    $table->unsignedInteger('serving_size')->default(1);
-    $table->foreignUuid('flavor_1_product_id')->nullable()->constrained('products', 'uuid')->onDelete('cascade');
-    $table->decimal('flavor_1_quantity', 5, 2)->nullable();
-    $table->foreignUuid('flavor_2_product_id')->nullable()->constrained('products', 'uuid')->onDelete('cascade');
-    $table->decimal('flavor_2_quantity', 5, 2)->nullable();
-    $table->foreignUuid('flavor_3_product_id')->nullable()->constrained('products', 'uuid')->onDelete('cascade');
-    $table->decimal('flavor_3_quantity', 5, 2)->nullable();
-    $table->decimal('shakemate_quantity', 5, 2)->nullable();
-    $table->decimal('protein_quantity', 5, 2)->nullable();
-    $table->decimal('water_quantity', 5, 2)->nullable();
-    $table->decimal('ice_quantity', 5, 2)->nullable();
-    $table->text('notes')->nullable();
-    $table->foreignUuid('created_by')->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('shake_combinations', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('name');
+    $t->unsignedInteger('serving_size')->default(1);
+    $t->foreignUuid('flavor_1_product_id')->nullable()->constrained('products', 'uuid')->onDelete('cascade');
+    $t->decimal('flavor_1_quantity', 5, 2)->nullable();
+    $t->foreignUuid('flavor_2_product_id')->nullable()->constrained('products', 'uuid')->onDelete('cascade');
+    $t->decimal('flavor_2_quantity', 5, 2)->nullable();
+    $t->foreignUuid('flavor_3_product_id')->nullable()->constrained('products', 'uuid')->onDelete('cascade');
+    $t->decimal('flavor_3_quantity', 5, 2)->nullable();
+    $t->decimal('shakemate_quantity', 5, 2)->nullable();
+    $t->decimal('protein_quantity', 5, 2)->nullable();
+    $t->decimal('water_quantity', 5, 2)->nullable();
+    $t->decimal('ice_quantity', 5, 2)->nullable();
+    $t->text('notes')->nullable();
+    $t->foreignUuid('created_by')->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['created_by']);
+    $t->index(['created_by']);
 });
 
-Schema::create('club_shake_counter', function (Blueprint $table) {
-    $table->uuid('uuid')->primary();
-    $table->foreignUuid('club_id')->constrained('clubs', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('member_id')->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('shake_combination_id')->constrained('shake_combinations', 'uuid')->onDelete('cascade');
-    $table->timestamp('first_serving_at')->nullable();
-    $table->timestamp('refill_serving_at')->nullable();
-    $table->foreignUuid('counter_operator_id')->constrained('users', 'uuid')->onDelete('cascade');
-    $table->date('date');
-    $table->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
-    $table->timestamps();
-    $table->softDeletes();
+Schema::create('club_shake_counter', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('club_id')->constrained('clubs', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('member_id')->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('shake_combination_id')->constrained('shake_combinations', 'uuid')->onDelete('cascade');
+    $t->timestamp('first_serving_at')->nullable();
+    $t->timestamp('refill_serving_at')->nullable();
+    $t->foreignUuid('counter_operator_id')->constrained('users', 'uuid')->onDelete('cascade');
+    $t->date('date');
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
     
     // Performance indexes
-    $table->index(['club_id']);
-    $table->index(['member_id']);
-    $table->index(['date']);
-    $table->index(['counter_operator_id']);
+    $t->index(['club_id']);
+    $t->index(['member_id']);
+    $t->index(['date']);
+    $t->index(['counter_operator_id']);
 });
 ```
 
 
+## Calendar Management System
 
+### Core Concepts
+The calendar management system provides comprehensive scheduling and time tracking capabilities for wellness coaches and members:
 
+1. **Event Scheduling**: Create, manage, and track various types of events and activities
+2. **Recurring Events**: Support for complex recurrence patterns (daily, weekly, monthly, yearly, custom intervals)
+3. **External Calendar Integration**: Sync with Google Calendar, iCal, Outlook, and other calendar services
+4. **Time Tracking**: Monitor daily activities and categorize time usage (major, minor, routine, wasted, other)
+5. **Smart Notifications**: Automated reminders and follow-ups based on calendar events
+6. **Activity Integration**: Direct links to prospects, members, clubs, and business activities
+
+### Database Schema
+
+#### Calendar Events
+```php
+Schema::create('calendar_events', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->string('title')->notNull();
+    $t->text('description')->nullable();
+    $t->dateTime('start_datetime')->notNull()->index();
+    $t->dateTime('end_datetime')->notNull()->index();
+    $t->string('location')->nullable();
+    $t->decimal('latitude', 11, 8)->nullable();
+    $t->decimal('longitude', 11, 8)->nullable();
+    $t->string('google_map_link')->nullable();
+    
+    // Event categorization
+    $t->enum('event_type', [
+        'activity',           // Business activities (TTP, Flyer, etc.)
+        'follow_up',          // Prospect/member follow-ups
+        'appointment',        // Health consultations
+        'club_session',       // Club meetings/sessions
+        'measurement',        // Measurement appointments
+        'training',           // Training sessions
+        'meeting',            // Business meetings
+        'personal',           // Personal appointments
+        'reminder',           // General reminders
+        'custom'              // Custom event types
+    ])->default('activity')->index();
+    
+    $t->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
+    $t->enum('status', ['scheduled', 'in_progress', 'completed', 'cancelled', 'postponed'])->default('scheduled');
+    
+    // Color coding and styling
+    $t->string('color')->default('#1976D2'); // Material Design Blue
+    $t->string('icon')->nullable(); // FontAwesome or custom icon
+    $t->boolean('is_all_day')->default(false);
+    $t->boolean('is_private')->default(false);
+    
+    // Recurrence settings
+    $t->boolean('is_recurring')->default(false);
+    $t->json('recurrence_rule')->nullable(); // RRULE format
+    $t->dateTime('recurrence_end')->nullable();
+    $t->uuid('recurrence_parent_uuid')->nullable(); // For recurring event series
+    
+    // External calendar integration
+    $t->string('external_calendar_id')->nullable(); // Google Calendar ID, etc.
+    $t->string('external_event_id')->nullable(); // External event ID
+    $t->enum('sync_status', ['synced', 'pending_sync', 'sync_failed'])->default('synced');
+    $t->timestamp('last_synced_at')->nullable();
+    
+    // Reminders and notifications
+    $t->json('reminders')->nullable(); // Array of reminder times
+    $t->boolean('send_notifications')->default(true);
+    
+    // Related entities (polymorphic)
+    $t->string('related_type')->nullable(); // 'prospect', 'member', 'club', 'activity'
+    $t->string('related_uuid', 36)->nullable();
+    
+    // Audit fields
+    $t->foreignUuid('created_by')->constrained('users', 'uuid')->onDelete('cascade')->index();
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
+    
+    // Performance indexes
+    $t->index(['start_datetime', 'end_datetime']);
+    $t->index(['event_type', 'status']);
+    $t->index(['is_recurring', 'recurrence_parent_uuid']);
+    $t->index(['external_calendar_id', 'external_event_id']);
+    $t->index(['related_type', 'related_uuid']);
+    $t->index(['created_by', 'start_datetime']);
+});
+```
+
+#### Calendar Participants
+```php
+Schema::create('calendar_participants', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('event_uuid')->constrained('calendar_events', 'uuid')->onDelete('cascade')->index();
+    $t->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade')->index();
+    
+    // Participant status
+    $t->enum('status', ['invited', 'accepted', 'declined', 'tentative', 'no_response'])->default('invited');
+    $t->enum('role', ['organizer', 'attendee', 'optional'])->default('attendee');
+    
+    // Response tracking
+    $t->timestamp('responded_at')->nullable();
+    $t->text('response_notes')->nullable();
+    
+    // Notification preferences
+    $t->boolean('send_reminders')->default(true);
+    $t->json('reminder_times')->nullable(); // Custom reminder times for this participant
+    
+    $t->timestamps();
+    $t->softDeletes();
+    
+    // Performance indexes
+    $t->unique(['event_uuid', 'user_uuid']);
+    $t->index(['user_uuid', 'status']);
+});
+```
+
+#### External Calendar Integrations
+```php
+Schema::create('external_calendars', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade')->index();
+    
+    // Calendar provider details
+    $t->enum('provider', ['google', 'outlook', 'apple', 'ical', 'other'])->index();
+    $t->string('calendar_id')->notNull(); // External calendar ID
+    $t->string('calendar_name')->notNull();
+    $t->string('calendar_color')->nullable();
+    
+    // Authentication and sync settings
+    $t->text('access_token')->nullable();
+    $t->text('refresh_token')->nullable();
+    $t->timestamp('token_expires_at')->nullable();
+    $t->boolean('is_active')->default(true);
+    $t->boolean('two_way_sync')->default(true); // Sync both directions
+    
+    // Sync settings
+    $t->enum('sync_frequency', ['realtime', 'hourly', 'daily', 'manual'])->default('hourly');
+    $t->timestamp('last_synced_at')->nullable();
+    $t->timestamp('next_sync_at')->nullable();
+    
+    // Event filtering
+    $t->json('sync_filters')->nullable(); // Which events to sync
+    $t->boolean('sync_past_events')->default(false);
+    $t->integer('sync_days_future')->default(365); // How many days ahead to sync
+    
+    $t->timestamps();
+    $t->softDeletes();
+    
+    // Performance indexes
+    $t->unique(['user_uuid', 'provider', 'calendar_id']);
+    $t->index(['provider', 'is_active']);
+});
+```
+
+#### Time Tracking System
+```php
+Schema::create('time_blocks', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade')->index();
+    $t->date('date')->notNull()->index();
+    
+    // Time block details
+    $t->time('start_time')->notNull();
+    $t->time('end_time')->notNull();
+    $t->string('title')->notNull();
+    $t->text('description')->nullable();
+    
+    // Time categorization
+    $t->enum('category', ['major', 'minor', 'routine', 'wasted'])->default('routine');
+    $t->enum('activity_type', [
+        'prospect_work',      // Working with prospects
+        'member_support',     // Supporting members
+        'club_management',    // Club activities
+        'product_sales',      // Product sales activities
+        'training',           // Training and development
+        'administration',     // Administrative tasks
+        'personal',           // Personal time
+        'exercise',           // Exercise and fitness
+        'meal_prep',          // Meal preparation
+        'rest',               // Rest and relaxation
+        'travel',             // Travel time
+        'other'               // Other activities
+    ])->default('other');
+    
+    // Productivity metrics
+    $t->integer('productivity_score')->nullable(); // 1-10 scale
+    $t->boolean('was_productive')->default(false);
+    $t->text('notes')->nullable();
+    
+    // Related entities
+    $t->string('related_type')->nullable(); // 'prospect', 'member', 'club', 'activity'
+    $t->string('related_uuid', 36)->nullable();
+    
+    // Audit fields
+    $t->foreignUuid('created_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('updated_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->foreignUuid('deleted_by')->nullable()->constrained('users', 'uuid')->onDelete('cascade');
+    $t->timestamps();
+    $t->softDeletes();
+    
+    // Performance indexes
+    $t->index(['user_uuid', 'date']);
+    $t->index(['category', 'activity_type']);
+    $t->index(['related_type', 'related_uuid']);
+});
+```
+
+#### Time Tracking Preferences
+```php
+Schema::create('time_tracking_preferences', function (Blueprint $t) {
+    $t->uuid('uuid')->primary();
+    $t->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade')->unique();
+    
+    // Time block settings
+    $t->enum('default_block_size', ['15min', '30min', '1hour', 'custom'])->default('30min');
+    $t->integer('custom_block_minutes')->nullable();
+    $t->boolean('auto_track_events')->default(true); // Auto-create time blocks from calendar events
+    
+    // Reminder settings
+    $t->boolean('enable_time_tracking_reminders')->default(true);
+    $t->json('reminder_times')->nullable(); // When to remind about time tracking
+    $t->boolean('end_of_day_summary')->default(true);
+    $t->boolean('weekly_productivity_report')->default(true);
+    
+    // Default categories
+    $t->json('default_categories')->nullable(); // User's preferred activity categories
+    $t->json('category_colors')->nullable(); // Color coding for categories
+    
+    // Integration settings
+    $t->boolean('sync_with_calendar')->default(true);
+    $t->boolean('auto_categorize_events')->default(true);
+    
+    $t->timestamps();
+    $t->softDeletes();
+});
+```
+
+### Recurrence Patterns
+
+The system supports complex recurrence patterns using RRULE (RFC 5545) format:
+
+#### Supported Recurrence Types:
+1. **Hourly**: Every N hours
+2. **Daily**: 
+   - Every day
+   - Every N days
+   - Every weekday (Mon-Fri)
+   - Every weekend (Sat-Sun)
+   - Every alternate day
+3. **Weekly**:
+   - Every week
+   - Every N weeks
+   - Specific days of week (Mon, Wed, Fri)
+   - Every alternate week
+4. **Monthly**:
+   - Every month
+   - Every N months
+   - Specific day of month (1st, 15th, last day)
+   - Specific week of month (1st Monday, 3rd Friday)
+5. **Quarterly**:
+   - Every quarter
+   - Every N quarters
+   - Specific date (1st day of quarter)
+   - Specific day of quarter (1st Monday of quarter)
+6. **Half Yearly**:
+   - Every half year
+   - Specific date (1st day of half year)
+   - Specific day of half year (1st Monday of half year)
+7. **Yearly**:
+   - Every year
+   - Every N years
+   - Specific date (March 15th)
+   - Specific day of year (1st Monday of March)
+
+#### Recurrence Rule Examples:
+```php
+// Every Monday and Wednesday at 9 AM
+$rrule = 'FREQ=WEEKLY;BYDAY=MO,WE;BYHOUR=9';
+
+// Every 2 weeks on Friday
+$rrule = 'FREQ=WEEKLY;INTERVAL=2;BYDAY=FR';
+
+// Every 3rd day of month
+$rrule = 'FREQ=MONTHLY;BYMONTHDAY=3';
+
+// Every alternate day
+$rrule = 'FREQ=DAILY;INTERVAL=2';
+
+// Every 2 hours during business hours
+$rrule = 'FREQ=HOURLY;INTERVAL=2;BYHOUR=9,10,11,12,13,14,15,16,17';
+```
+
+### Key Features
+
+#### 1. Calendar Integration
+- **Google Calendar**: Full two-way sync with Google Calendar API
+- **Outlook/Exchange**: Integration with Microsoft Graph API
+- **Apple Calendar**: iCal format import/export
+- **Other Calendars**: Generic iCal support for any calendar system
+
+#### 2. Smart Scheduling
+- **Conflict Detection**: Automatically detect scheduling conflicts
+- **Availability Suggestions**: Suggest optimal meeting times
+- **Travel Time**: Automatically add travel time between locations
+- **Buffer Time**: Add buffer time before/after events
+- **Recurring Events**: Complex recurrence patterns with exceptions
+
+#### 3. Time Tracking
+- **Flexible Time Blocks**: 15min, 30min, 1-hour, or custom intervals
+- **Activity Categorization**: Major, minor, routine, wasted time
+- **Productivity Scoring**: Rate productivity for each time block
+- **Auto-tracking**: Automatically create time blocks from calendar events
+- **Daily/Weekly Reports**: Productivity insights and time analysis
+
+#### 4. Event Types and Integration
+- **Activity Events**: Direct links to TTP, Flyer, Survey, etc.
+- **Follow-up Events**: Prospect and member follow-up scheduling
+- **Club Sessions**: Club meeting and session scheduling
+- **Measurement Appointments**: Health measurement scheduling
+- **Training Sessions**: Training and development events
+- **Business Meetings**: Team and client meetings
+
+#### 5. Notifications and Reminders
+- **Multi-channel Notifications**: Email, SMS, push notifications
+- **Smart Reminders**: Context-aware reminder timing
+- **Follow-up Automation**: Automatic follow-up scheduling
+- **Missed Event Alerts**: Notify about missed or incomplete events
+
+#### 6. Reporting and Analytics
+- **Time Analysis**: How time is spent across categories
+- **Productivity Trends**: Track productivity over time
+- **Event Completion Rates**: Success rate of scheduled events
+- **Prospect Follow-up Metrics**: Follow-up effectiveness
+- **Revenue Correlation**: Link time spent to business outcomes
+
+### API Endpoints
+
+#### Calendar Events
+```php
+// Calendar Event Management
+GET /api/calendar-events
+POST /api/calendar-events
+GET /api/calendar-events/{event}
+PUT /api/calendar-events/{event}
+DELETE /api/calendar-events/{event}
+GET /api/calendar-events/by-date-range
+GET /api/calendar-events/by-type/{type}
+POST /api/calendar-events/{event}/duplicate
+POST /api/calendar-events/{event}/reschedule
+
+// Recurring Events
+POST /api/calendar-events/{event}/make-recurring
+PUT /api/calendar-events/{event}/recurrence
+DELETE /api/calendar-events/{event}/recurrence
+GET /api/calendar-events/recurring-series/{parentUuid}
+
+// Event Participants
+GET /api/calendar-events/{event}/participants
+POST /api/calendar-events/{event}/participants
+PUT /api/calendar-events/{event}/participants/{participant}
+DELETE /api/calendar-events/{event}/participants/{participant}
+POST /api/calendar-events/{event}/participants/{participant}/respond
+```
+
+#### External Calendar Integration
+```php
+// External Calendar Management
+GET /api/external-calendars
+POST /api/external-calendars
+GET /api/external-calendars/{calendar}
+PUT /api/external-calendars/{calendar}
+DELETE /api/external-calendars/{calendar}
+POST /api/external-calendars/{calendar}/sync
+GET /api/external-calendars/{calendar}/sync-status
+
+// Calendar Provider OAuth
+POST /api/external-calendars/google/authorize
+POST /api/external-calendars/outlook/authorize
+GET /api/external-calendars/oauth/callback
+```
+
+#### Time Tracking
+```php
+// Time Block Management
+GET /api/time-blocks
+POST /api/time-blocks
+GET /api/time-blocks/{timeBlock}
+PUT /api/time-blocks/{timeBlock}
+DELETE /api/time-blocks/{timeBlock}
+GET /api/time-blocks/by-date/{date}
+GET /api/time-blocks/by-date-range
+GET /api/time-blocks/productivity-report
+
+// Time Tracking Preferences
+GET /api/time-tracking-preferences
+PUT /api/time-tracking-preferences
+POST /api/time-tracking-preferences/auto-track
+```
+
+#### Calendar Views and Reports
+```php
+// Calendar Views
+GET /api/calendar/agenda
+GET /api/calendar/weekly
+GET /api/calendar/monthly
+GET /api/calendar/yearly
+GET /api/calendar/search
+
+// Analytics and Reports
+GET /api/calendar/analytics/time-spent
+GET /api/calendar/analytics/productivity
+GET /api/calendar/analytics/event-completion
+GET /api/calendar/analytics/follow-up-effectiveness
+GET /api/calendar/reports/daily
+GET /api/calendar/reports/weekly
+GET /api/calendar/reports/monthly
+```
+
+### Business Logic
+
+#### 1. Event Creation and Management
+- **Smart Defaults**: Pre-fill event details based on type and context
+- **Location Intelligence**: Auto-suggest locations based on history
+- **Participant Management**: Easy invite and response tracking
+- **Conflict Resolution**: Suggest alternative times for conflicts
+
+#### 2. Recurrence Handling
+- **Pattern Generation**: Convert user-friendly options to RRULE format
+- **Exception Management**: Handle individual event modifications in series
+- **Series Updates**: Update entire series or individual occurrences
+- **End Date Handling**: Support for end dates and occurrence limits
+
+#### 3. External Calendar Sync
+- **Bidirectional Sync**: Keep local and external calendars in sync
+- **Conflict Resolution**: Handle conflicts between local and external events
+- **Selective Sync**: Choose which events to sync
+- **Error Handling**: Graceful handling of sync failures
+
+#### 4. Time Tracking Integration
+- **Auto-block Creation**: Create time blocks from calendar events
+- **Smart Categorization**: Auto-categorize based on event type
+- **Productivity Insights**: Track productivity patterns
+- **Goal Tracking**: Monitor time spent on goals vs. actual
+
+#### 5. Notification System
+- **Context-aware Reminders**: Remind based on event type and importance
+- **Multi-channel Delivery**: Email, SMS, push notifications
+- **Smart Timing**: Send reminders at optimal times
+- **Follow-up Automation**: Auto-schedule follow-ups
+
+### Frontend Integration
+
+#### Calendar Views
+1. **Agenda View**: List view with time slots
+2. **Day View**: Hourly breakdown of single day
+3. **Week View**: 7-day calendar view
+4. **Month View**: Full month overview
+5. **Year View**: Annual planning view
+
+#### Time Tracking Interface
+1. **Quick Time Entry**: Fast time block creation
+2. **Drag-and-Drop**: Visual time block management
+3. **Category Selection**: Easy activity categorization
+4. **Productivity Rating**: Quick productivity scoring
+5. **Daily Summary**: End-of-day time review
+
+#### Integration Features
+1. **Prospect Linking**: Direct links to prospect profiles
+2. **Member Integration**: Connect events to member activities
+3. **Club Management**: Schedule and track club sessions
+4. **Activity Tracking**: Link to business activities
+5. **Measurement Scheduling**: Health measurement appointments
+
+### Security and Permissions
+
+#### Access Control
+- **Personal Events**: Users can only see their own events
+- **Shared Events**: Participants can see events they're invited to
+- **Team Events**: Coaches can see team member events (with permission)
+- **Public Events**: Club sessions and activities visible to members
+
+#### Data Privacy
+- **Private Events**: Mark events as private (not visible to others)
+- **Sensitive Information**: Encrypt sensitive event details
+- **Audit Trail**: Track all calendar modifications
+- **Data Retention**: Configurable data retention policies
+
+### Implementation Phases
+
+#### Phase 1: Core Calendar (Weeks 1-4)
+- Basic calendar events CRUD
+- Simple recurrence patterns
+- Basic time tracking
+- Calendar views (day, week, month)
+
+#### Phase 2: Advanced Features (Weeks 5-8)
+- Complex recurrence patterns
+- External calendar integration
+- Advanced time tracking
+- Notification system
+
+#### Phase 3: Integration & Analytics (Weeks 9-12)
+- Full system integration
+- Analytics and reporting
+- Mobile optimization
+- Performance optimization
 
 ## Implementation Status
 
